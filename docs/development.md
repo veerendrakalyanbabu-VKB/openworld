@@ -4,9 +4,14 @@
 
 - Python 3.11+
 - Node.js 20+
-- PostgreSQL 16+ (recommended for Milestone 1.3A persistence)
+- PostgreSQL 17 (recommended for persistence; 16+ works)
 
 ## Setup
+
+```powershell
+python -m pip install -e ".[dev]"
+Copy-Item .env.example .env
+```
 
 ```bash
 pip install -e ".[dev]"
@@ -16,6 +21,11 @@ cp .env.example .env
 ### PostgreSQL (persistence)
 
 **Option A — Docker:**
+
+```powershell
+docker compose up -d postgres
+$env:OPENWORLD_DATABASE_URL="postgresql://openworld:openworld@localhost:5432/openworld"
+```
 
 ```bash
 docker compose up -d postgres
@@ -125,6 +135,8 @@ Authentication flows through `IdentityProvider` → `AuthenticatedPrincipal` →
 ### Idempotency
 
 Pass `Idempotency-Key` header on `POST /api/v1/actions`. Same key + same payload returns cached response; conflicting payload → 409.
+
+See [Onboarding](onboarding.md) for troubleshooting. Bounded GitHub connector env vars are in `.env.example` (`OPENWORLD_GITHUB_*`); dry-run is the default.
 
 ## Running Tests
 

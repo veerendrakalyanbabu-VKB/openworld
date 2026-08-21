@@ -50,60 +50,89 @@ openworld/
 
 ## Quick Start
 
+Full walkthrough: [Developer Onboarding](docs/onboarding.md). Gateway: [docs/gateway.md](docs/gateway.md). SDK: [docs/sdk.md](docs/sdk.md).
+
 ### Prerequisites
 
 - Python 3.11+
-- Node.js 20+ (for frontend)
-- pip
+- Node.js 20+ (frontend)
+- PostgreSQL 17 recommended (SQLite OK for a first boot)
 
-### Backend
+### Backend (PowerShell)
 
-```bash
-pip install -e ".[dev]"
-uvicorn apps.api.main:app --reload --port 8000
+```powershell
+python -m pip install -e ".[dev]"
+Copy-Item .env.example .env
+python -m alembic upgrade head
+python -m uvicorn apps.api.main:app --port 8000
 ```
 
-API docs: http://localhost:8000/api/docs
+### Backend (Linux / macOS)
+
+```bash
+python -m pip install -e ".[dev]"
+cp .env.example .env
+python -m alembic upgrade head
+python -m uvicorn apps.api.main:app --port 8000
+```
+
+API: http://localhost:8000/api/docs — health: `/api/v1/health` — ready: `/api/v1/ready`
 
 ### Frontend
 
-```bash
-cd apps/web
+```powershell
+cd apps\web
 npm install
 npm run dev
 ```
 
+```bash
+cd apps/web && npm install && npm run dev
+```
+
 UI: http://localhost:3000
 
-### Docker
+### Docker (local stack)
 
 ```bash
 docker compose up
 ```
 
+Compose starts PostgreSQL, API, and web. Do not put secrets in images.
+
+### SDK (real client)
+
+```python
+from packages.sdk.openworld import OpenWorldClient
+
+with OpenWorldClient(base_url="http://localhost:8000") as client:
+    client.authenticate("agent-email-bot")
+    result = client.actions.submit(
+        agent="EmailBot",
+        action="email.send",
+        parameters={"to": "dev@example.com", "subject": "Hello"},
+        auto_approve=True,
+        idempotency_key="quickstart-email-1",
+    )
+    print(result.action["status"])
+```
+
+Run `python examples/basic_action.py` with the API up. Identity is the JWT, never a body `agent_id`.
+
 ### CLI
 
-```bash
+```powershell
 openworld health
 openworld agents list
-openworld actions list
-openworld policies list
-openworld audit list
 openworld demo
 ```
 
-### SDK
+### Tests
 
-```python
-from openworld import OpenWorldClient
-
-client = OpenWorldClient()
-
-result = client.actions.request(
-    agent="invoice-bot",
-    action="invoice.send",
-    parameters={"invoice_id": "INV-1001"},
-)
+```powershell
+python -m pytest tests/ -q
+python -m ruff check .
+python scripts/smoke_test_api.py
 ```
 
 ## Milestone 2.0B — Governance + Production Identity Hardening
@@ -156,7 +185,9 @@ ruff check core/ apps/ packages/ tests/
 
 ## Documentation
 
+- [Developer Onboarding](docs/onboarding.md)
 - [Architecture](docs/architecture.md)
+- [API Gateway](docs/gateway.md)
 - [Policy Engine](docs/policy-engine.md)
 - [Trust Model](docs/trust-model.md)
 - [API Reference](docs/api.md)
@@ -179,9 +210,11 @@ ruff check core/ apps/ packages/ tests/
 - [x] Durable idempotency
 - [x] Production authorization boundaries (Milestone 2.0A)
 - [x] Governance: roles, policy lifecycle, audit export (Milestone 2.0B)
-- [ ] Redis caching
-- [ ] Real connector integrations
-- [ ] Multi-tenant SaaS
+- [x] SDK + API gateway (Milestone 2.1)
+- [x] Bounded GitHub issue connector, disabled by default (Milestone 2.2)
+- [ ] Cloud deployment
+- [ ] External beta
+- [ ] Monetization foundation
 
 ## Contributing
 

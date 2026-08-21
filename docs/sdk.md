@@ -25,6 +25,8 @@ client.set_token(token)
 # or: client.authenticate("agent-email-bot")
 # Privileged calls (approvals, audit, policy/role admin) require an explicit token.
 
+Examples in `examples/`: `basic_action.py`, `approval_flow.py`, `audit_query.py`.
+
 # Correlation ID for distributed tracing
 client.set_correlation_id("my-trace-id")
 

@@ -118,6 +118,10 @@ Production (`OPENWORLD_DEMO_MODE=false`): unmatched policies → DENY; PostgreSQ
 
 Python SDK (`packages/sdk/openworld`) is a typed HTTP client only — no duplicated policy/risk/approval logic.
 
+## Bounded connector (Milestone 2.2)
+
+`core/connectors/` registers `github.issue.create` on the execution engine. It still requires identity, capability, policy, risk, and approval. Disabled by default; without credentials it dry-runs and sets `live_verified: false`.
+
 ## API Design
 
 Versioned REST at `/api/v1/`. Audit events are append-only — no client edit/delete endpoints.
