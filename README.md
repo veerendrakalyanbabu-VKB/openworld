@@ -10,6 +10,13 @@ OpenWorld is open, developer-first infrastructure that lets AI agents act on sof
 
 **Core principle: Never trust the agent. Verify the action.**
 
+### Release status
+
+- **Repository:** Publicly available on GitHub as source code.
+- **Run locally:** Clone the repo, install dependencies, and start the API and web UI on your machine.
+- **Hosted deployment:** No public hosted OpenWorld instance is available yet. There is no live production URL for this release.
+- **Integrations:** Sandbox and demo executors (email, payments, webhooks, etc.) are **not** live production integrations.
+
 This release is an **Early Developer Preview**. It is **not** enterprise production-ready, **not** a live cloud deployment, and **not** backed by real customer integrations. Demo executors are sandbox/mock and labeled **DEMO DATA**.
 
 ---
@@ -89,7 +96,9 @@ Full walkthrough: [Developer Onboarding](docs/onboarding.md) · [Gateway](docs/g
 - Node.js 20+ (frontend)
 - PostgreSQL 17 recommended (SQLite OK for first boot)
 
-### 1. Install and configure
+### Local development
+
+Install dependencies and apply migrations from the repository root:
 
 **PowerShell**
 
@@ -97,7 +106,6 @@ Full walkthrough: [Developer Onboarding](docs/onboarding.md) · [Gateway](docs/g
 python -m pip install -e ".[dev]"
 Copy-Item .env.example .env
 python -m alembic upgrade head
-python -m uvicorn apps.api.main:app --port 8000
 ```
 
 **Linux / macOS**
@@ -106,12 +114,35 @@ python -m uvicorn apps.api.main:app --port 8000
 python -m pip install -e ".[dev]"
 cp .env.example .env
 python -m alembic upgrade head
+```
+
+Start the API:
+
+```powershell
 python -m uvicorn apps.api.main:app --port 8000
 ```
 
-API: http://localhost:8000/api/docs · health: `/api/v1/health` · ready: `/api/v1/ready`
+**LOCAL DEVELOPMENT URLs** (not publicly hosted):
 
-### 2. Start the web UI
+API documentation:
+
+```text
+http://localhost:8000/api/docs
+```
+
+Health:
+
+```text
+http://localhost:8000/api/v1/health
+```
+
+Readiness:
+
+```text
+http://localhost:8000/api/v1/ready
+```
+
+Start the web UI:
 
 ```powershell
 cd apps\web
@@ -119,9 +150,13 @@ npm install
 npm run dev
 ```
 
-UI: http://localhost:3000
+Local web UI (**LOCAL DEVELOPMENT URL**):
 
-### 3. Run the gateway quickstart
+```text
+http://localhost:3000
+```
+
+### Run the gateway quickstart
 
 With the API running in **demo mode** (default):
 
