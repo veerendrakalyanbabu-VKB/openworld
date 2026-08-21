@@ -1,0 +1,51 @@
+# Production-oriented compose template.
+# Status: READY FOR DEPLOYMENT — not ACTUALLY DEPLOYED by this repository.
+# Put secrets in the host environment or a local untracked file. Never commit them.
+#
+# This file does not create a managed cloud database. Running it locally with
+# the optional postgres service can incur disk use only. Cloud VMs, managed
+# PostgreSQL, and load balancers are billable if you provision them yourself.
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    ports:
+      - "8000:8000"
+    environment:
+      OPENWORLD_DEMO_MODE: "false"
+      OPENWORLD_ENVIRONMENT: production
+      OPENWORLD_POLICY_DEFAULT_DENY: "true"
+      OPENWORLD_DATABASE_URL: ${OPENWORLD_DATABASE_URL}
+      OPENWORLD_SECRET_KEY: ${OPENWORLD_SECRET_KEY}
+      OPENWORLD_CORS_ORIGINS: ${OPENWORLD_CORS_ORIGINS}
+    mem_limit: 512m
+    cpus: 1.0
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/ready', timeout=4)",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.web
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+    mem_limit: 256m
+    cpus: 0.5
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped

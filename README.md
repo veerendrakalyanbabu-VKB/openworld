@@ -193,6 +193,7 @@ ruff check core/ apps/ packages/ tests/
 - [API Reference](docs/api.md)
 - [SDK Guide](docs/sdk.md)
 - [Development](docs/development.md)
+- [Deployment](docs/deployment.md) (READY FOR DEPLOYMENT, not actually deployed)
 - [Roadmap](docs/roadmap.md)
 
 ## Roadmap
