@@ -1,0 +1,86 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-ow-border-subtle;
+  }
+
+  body {
+    @apply bg-ow-bg text-ow-text antialiased;
+  }
+
+  ::selection {
+    @apply bg-ow-accent/30 text-white;
+  }
+}
+
+@layer components {
+  .glass {
+    @apply bg-ow-surface/80 backdrop-blur-xl border border-ow-border-subtle rounded-xl;
+  }
+
+  .glass-elevated {
+    @apply bg-ow-surface-elevated/90 backdrop-blur-xl border border-ow-border rounded-xl shadow-lg;
+  }
+
+  .btn-primary {
+    @apply px-4 py-2 bg-ow-accent text-ow-bg font-medium rounded-lg
+           hover:bg-ow-accent/90 transition-colors focus:outline-none focus:ring-2 focus:ring-ow-accent/50;
+  }
+
+  .btn-secondary {
+    @apply px-4 py-2 bg-ow-surface-elevated text-ow-text font-medium rounded-lg border border-ow-border
+           hover:bg-ow-border-subtle transition-colors focus:outline-none focus:ring-2 focus:ring-ow-accent/30;
+  }
+
+  .btn-danger {
+    @apply px-4 py-2 bg-ow-blocked/20 text-ow-blocked font-medium rounded-lg border border-ow-blocked/30
+           hover:bg-ow-blocked/30 transition-colors;
+  }
+
+  .btn-approve {
+    @apply px-4 py-2 bg-ow-trusted/20 text-ow-trusted font-medium rounded-lg border border-ow-trusted/30
+           hover:bg-ow-trusted/30 transition-colors;
+  }
+
+  .stat-card {
+    @apply glass p-5 flex flex-col gap-1;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-trusted {
+    @apply badge bg-ow-trusted/15 text-ow-trusted;
+  }
+
+  .badge-approval {
+    @apply badge bg-ow-approval/15 text-ow-approval;
+  }
+
+  .badge-blocked {
+    @apply badge bg-ow-blocked/15 text-ow-blocked;
+  }
+
+  .badge-intelligence {
+    @apply badge bg-ow-intelligence/15 text-ow-intelligence;
+  }
+
+  .input-field {
+    @apply w-full px-3 py-2 bg-ow-bg border border-ow-border rounded-lg text-ow-text
+           placeholder:text-ow-text-dim focus:outline-none focus:ring-2 focus:ring-ow-accent/30 focus:border-ow-accent/50;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
