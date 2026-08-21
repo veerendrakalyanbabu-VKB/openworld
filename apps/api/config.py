@@ -1,8 +1,12 @@
 """API configuration."""
 
+import os
+
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DEFAULT_DEV_SECRET = "dev-only-not-for-production-use-32b-minimum-key"
+DEFAULT_LOCAL_CORS = ("http://localhost:3000", "http://127.0.0.1:3000")
 
 
 class Settings(BaseSettings):
@@ -34,6 +38,14 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_prefix="OPENWORLD_", env_file=".env")
 
+    @model_validator(mode="after")
+    def apply_platform_port(self) -> "Settings":
+        """Hosted platforms (e.g. Render) inject PORT; local dev keeps OPENWORLD_API_PORT / 8000."""
+        platform_port = os.environ.get("PORT")
+        if platform_port:
+            self.api_port = int(platform_port)
+        return self
+
     @property
     def effective_default_deny(self) -> bool:
         """Demo mode uses default-allow for simulation; production uses default-deny."""
@@ -60,6 +72,13 @@ class Settings(BaseSettings):
             errors.append("Production requires a non-default OPENWORLD_SECRET_KEY")
         if len(self.secret_key) < 32:
             errors.append("OPENWORLD_SECRET_KEY must be at least 32 characters")
+        if "*" in self.cors_origins:
+            errors.append("Wildcard OPENWORLD_CORS_ORIGINS is not allowed in staging/production")
+        if env_name == "production" and tuple(self.cors_origins) == DEFAULT_LOCAL_CORS:
+            errors.append(
+                "Production requires OPENWORLD_CORS_ORIGINS with your hosted web origin "
+                "(never use * or localhost defaults)"
+            )
         if errors:
             raise RuntimeError("Unsafe production configuration: " + "; ".join(errors))
 
