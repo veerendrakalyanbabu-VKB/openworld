@@ -29,6 +29,8 @@ class Settings(BaseSettings):
     max_response_bytes: int = 10_485_760
     db_pool_size: int = 5
     db_max_overflow: int = 10
+    rate_limit_per_minute: int = 0
+    audit_retention_days: int = 90
 
     model_config = SettingsConfigDict(env_prefix="OPENWORLD_", env_file=".env")
 

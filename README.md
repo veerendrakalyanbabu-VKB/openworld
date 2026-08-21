@@ -194,6 +194,7 @@ ruff check core/ apps/ packages/ tests/
 - [SDK Guide](docs/sdk.md)
 - [Development](docs/development.md)
 - [Deployment](docs/deployment.md) (READY FOR DEPLOYMENT, not actually deployed)
+- [External beta](docs/beta.md) (BETA-READY, not beta-live)
 - [Roadmap](docs/roadmap.md)
 
 ## Roadmap

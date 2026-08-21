@@ -10,6 +10,7 @@ from fastapi.responses import JSONResponse
 from apps.api.config import settings
 from apps.api.gateway import GatewayMiddleware, get_request_id, register_exception_handlers
 from apps.api.gateway.errors import structured_error
+from apps.api.gateway.rate_limit import MemoryRateLimiter, NoOpRateLimiter
 from apps.api.routers import (
     actions,
     agent_roles,
@@ -35,6 +36,7 @@ async def lifespan(app: FastAPI):
         "Starting OpenWorld API",
         demo_mode=settings.demo_mode,
         production=settings.is_production,
+        environment=settings.environment,
     )
     state.init_database()
     state.load_demo_data()
@@ -112,6 +114,11 @@ app.add_middleware(
 )
 app.add_middleware(
     GatewayMiddleware,
+    rate_limiter=(
+        MemoryRateLimiter(settings.rate_limit_per_minute)
+        if settings.rate_limit_per_minute > 0
+        else NoOpRateLimiter()
+    ),
     max_body_bytes=settings.max_request_bytes,
     max_response_bytes=settings.max_response_bytes,
 )

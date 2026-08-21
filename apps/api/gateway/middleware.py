@@ -12,6 +12,7 @@ from starlette.responses import Response
 
 from apps.api.gateway.errors import structured_error
 from apps.api.gateway.rate_limit import NoOpRateLimiter, RateLimiter
+from apps.api.tenancy import parse_tenant_id
 
 logger = structlog.get_logger()
 
@@ -69,10 +70,13 @@ class GatewayMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         request_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())
         request.state.request_id = request_id
+        tenant_id = parse_tenant_id(request)
+        request.state.tenant_id = tenant_id
 
         structlog.contextvars.clear_contextvars()
         structlog.contextvars.bind_contextvars(
             request_id=request_id,
+            tenant_id=tenant_id,
             method=request.method,
             path=request.url.path,
         )
