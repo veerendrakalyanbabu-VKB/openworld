@@ -90,9 +90,8 @@ def start_api() -> subprocess.Popen:
         [sys.executable, "-m", "uvicorn", "apps.api.main:app", "--port", "8000"],
         cwd=str(ROOT),
         env=api_env(),
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
     )
 
 
