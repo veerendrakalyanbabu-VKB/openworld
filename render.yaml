@@ -1,0 +1,35 @@
+# OpenWorld Render blueprint (reference only — NOT deployed by this repository).
+# Apply from the Render dashboard after creating PostgreSQL and setting secrets manually.
+# Do not commit real credentials, domains, or service IDs here.
+
+services:
+  - type: web
+    name: openworld-api
+    runtime: python
+    buildCommand: pip install .
+    preDeployCommand: python -m alembic upgrade head
+    startCommand: python -m uvicorn apps.api.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: OPENWORLD_ENVIRONMENT
+        value: production
+      - key: OPENWORLD_DEMO_MODE
+        value: "false"
+      - key: OPENWORLD_POLICY_DEFAULT_DENY
+        value: "true"
+      - key: OPENWORLD_DATABASE_URL
+        sync: false
+      - key: OPENWORLD_SECRET_KEY
+        sync: false
+      - key: OPENWORLD_CORS_ORIGINS
+        sync: false
+
+  - type: web
+    name: openworld-web
+    runtime: node
+    rootDir: apps/web
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        sync: false

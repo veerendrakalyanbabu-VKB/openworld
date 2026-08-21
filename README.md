@@ -309,7 +309,7 @@ docker compose -f docker-compose.prod.example.yml config
 
 Deployment artifacts exist (`docker/Dockerfile.api`, `docker/Dockerfile.web`, `docker-compose.prod.example.yml`) and are validated by tests.
 
-**Status: READY FOR DEPLOYMENT — not ACTUALLY DEPLOYED.** You supply PostgreSQL, TLS, and secrets. See [docs/deployment.md](docs/deployment.md).
+**Status: READY FOR DEPLOYMENT — not ACTUALLY DEPLOYED.** You supply PostgreSQL, TLS, and secrets. A Render blueprint (`render.yaml`) is included for reference; **Hosted Preview remains not yet deployed** until you verify a live deployment. See [docs/deployment.md](docs/deployment.md).
 
 Billing architecture is **BILLING-READY — not PAYMENTS-LIVE** ([docs/monetization.md](docs/monetization.md)).
 

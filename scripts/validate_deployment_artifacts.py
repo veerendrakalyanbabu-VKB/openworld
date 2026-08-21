@@ -37,6 +37,20 @@ def main() -> int:
         print("[FAIL] production env example must disable demo mode")
         failures += 1
 
+    render_yaml = _read("render.yaml")
+    if "openworld-api" not in render_yaml or "openworld-web" not in render_yaml:
+        print("[FAIL] render.yaml must define API and web services")
+        failures += 1
+    if "python -m uvicorn apps.api.main:app --host 0.0.0.0 --port $PORT" not in render_yaml:
+        print("[FAIL] render.yaml API start command must bind 0.0.0.0 to Render PORT")
+        failures += 1
+    if "python -m alembic upgrade head" not in render_yaml:
+        print("[FAIL] render.yaml must run alembic migrations before deploy")
+        failures += 1
+    if "sync: false" not in render_yaml:
+        print("[FAIL] render.yaml must mark secrets as sync: false")
+        failures += 1
+
     if failures:
         print(f"\n=== Result: {failures} failure(s) ===")
         return 1
