@@ -102,6 +102,22 @@ Production (`OPENWORLD_DEMO_MODE=false`): unmatched policies → DENY; PostgreSQ
 2. Demo seed (agents, policies)
 3. Restore pending approvals from database
 
+## API Gateway
+
+`apps/api/gateway/` is the HTTP boundary in front of routers. It does **not** evaluate Trust Core policy.
+
+| Concern | Behavior |
+|---------|----------|
+| Versioning | `/api/v1/` |
+| Correlation | `X-Request-ID` inbound/outbound; bound into structured logs |
+| AuthN/AuthZ | JWT + role dependencies on routers (backend authoritative) |
+| Rate limiting | `RateLimiter` hook (default NoOp) |
+| Request/response bounds | `OPENWORLD_MAX_REQUEST_BYTES` / `OPENWORLD_MAX_RESPONSE_BYTES` |
+| Errors | `{error, message, request_id, detail}` |
+| Health | `GET /api/v1/health` liveness; `GET /api/v1/ready` DB readiness |
+
+Python SDK (`packages/sdk/openworld`) is a typed HTTP client only — no duplicated policy/risk/approval logic.
+
 ## API Design
 
 Versioned REST at `/api/v1/`. Audit events are append-only — no client edit/delete endpoints.

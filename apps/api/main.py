@@ -1,6 +1,5 @@
 """FastAPI application entry point."""
 
-import uuid
 from contextlib import asynccontextmanager
 
 import structlog
@@ -9,6 +8,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from apps.api.config import settings
+from apps.api.gateway import GatewayMiddleware, get_request_id, register_exception_handlers
+from apps.api.gateway.errors import structured_error
 from apps.api.routers import (
     actions,
     agent_roles,
@@ -109,27 +110,27 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(
+    GatewayMiddleware,
+    max_body_bytes=settings.max_request_bytes,
+    max_response_bytes=settings.max_response_bytes,
+)
 
-
-@app.middleware("http")
-async def add_request_id(request: Request, call_next):
-    request_id = request.headers.get("X-Request-ID", str(uuid.uuid4()))
-    response = await call_next(request)
-    response.headers["X-Request-ID"] = request_id
-    return response
+register_exception_handlers(app)
 
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    request_id = request.headers.get("X-Request-ID", "unknown")
+    request_id = get_request_id(request)
     logger.error("Unhandled exception", error=str(exc), request_id=request_id)
     return JSONResponse(
         status_code=500,
-        content={
-            "error": "An internal error occurred",
-            "message": "Please try again or contact support",
-            "request_id": request_id,
-        },
+        content=structured_error(
+            status_code=500,
+            message="Please try again or contact support",
+            request_id=request_id,
+        ),
+        headers={"X-Request-ID": request_id},
     )
 
 

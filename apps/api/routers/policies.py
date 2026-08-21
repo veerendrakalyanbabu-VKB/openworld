@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from apps.api.auth.dependencies import AuthenticatedActor, require_policy_admin
+from apps.api.gateway import get_request_id
 from apps.api.state import state
 from core.governance.policies import apply_policy_enablement, apply_policy_update, snapshot_policy
 from core.models.audit import AuditEventType
@@ -72,7 +73,7 @@ async def create_policy(
         description=request.description,
         rules=request.rules,
     )
-    correlation_id = http_request.headers.get("X-Request-ID", "")
+    correlation_id = get_request_id(http_request)
     snapshot = snapshot_policy(policy, change_action="created", created_by=actor.agent.id)
     snapshot["id"] = str(uuid.uuid4())
     state.save_policy_snapshot(snapshot)
@@ -103,7 +104,7 @@ async def update_policy(
     policy = state.get_policy(policy_id)
     if not policy:
         raise HTTPException(status_code=404, detail="Policy not found")
-    correlation_id = http_request.headers.get("X-Request-ID", "")
+    correlation_id = get_request_id(http_request)
     updated, snapshot = apply_policy_update(
         policy,
         name=request.name,
@@ -132,7 +133,7 @@ async def disable_policy(
     policy = state.get_policy(policy_id)
     if not policy:
         raise HTTPException(status_code=404, detail="Policy not found")
-    correlation_id = http_request.headers.get("X-Request-ID", "")
+    correlation_id = get_request_id(http_request)
     was_enabled = policy.enabled
     updated, snapshot = apply_policy_enablement(
         policy,
@@ -156,7 +157,7 @@ async def enable_policy(
     policy = state.get_policy(policy_id)
     if not policy:
         raise HTTPException(status_code=404, detail="Policy not found")
-    correlation_id = http_request.headers.get("X-Request-ID", "")
+    correlation_id = get_request_id(http_request)
     was_enabled = policy.enabled
     updated, snapshot = apply_policy_enablement(
         policy,

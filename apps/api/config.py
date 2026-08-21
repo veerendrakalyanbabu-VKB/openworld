@@ -23,6 +23,10 @@ class Settings(BaseSettings):
     # Policy: when True, unmatched policies deny (production). Demo mode overrides to allow.
     policy_default_deny: bool = True
 
+    # Gateway bounds (bytes). Rate limiting stays a pluggable NoOp by default.
+    max_request_bytes: int = 1_048_576
+    max_response_bytes: int = 10_485_760
+
     model_config = SettingsConfigDict(env_prefix="OPENWORLD_", env_file=".env")
 
     @property
