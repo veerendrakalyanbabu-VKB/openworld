@@ -89,6 +89,18 @@ DEMO_AGENTS = [
         created_at=utc_now() - timedelta(days=15),
     ),
     Agent(
+        id="agent-github-bot",
+        name="GithubBot",
+        description="Creates GitHub issues through the bounded connector",
+        owner="engineering",
+        status=AgentStatus.ACTIVE,
+        capabilities=["github.issue.create"],
+        trust_dimensions=TrustDimensions(
+            identity=100, policy=96, reliability=94, verification=95, violations=100
+        ),
+        created_at=utc_now() - timedelta(days=10),
+    ),
+    Agent(
         id="agent-data-bot",
         name="DataBot",
         description="Database read/write operations for analytics",
@@ -187,6 +199,22 @@ DEMO_POLICIES = [
             ),
         ],
     ),
+    Policy(
+        id="policy-github-issues",
+        name="github-issue-create",
+        description="Allow listed agent to create GitHub issues after Trust Core gates",
+        version="1.0",
+        rules=[
+            PolicyRule(
+                id="rule-github-issue-allow",
+                name="Allow GitHub Issue Create",
+                agent_match="GithubBot",
+                action_match="github.issue.create",
+                effect=PolicyEffect.ALLOW,
+                priority=40,
+            ),
+        ],
+    ),
 ]
 
 DEMO_CAPABILITIES = [
@@ -201,4 +229,5 @@ DEMO_CAPABILITIES = [
     {"id": "cap-db-read", "name": "database.read", "description": "Read database", "category": "data", "sensitivity": "medium"},
     {"id": "cap-db-write", "name": "database.write", "description": "Write database", "category": "data", "sensitivity": "critical"},
     {"id": "cap-webhook", "name": "webhook.send", "description": "Send webhooks", "category": "integration", "sensitivity": "medium"},
+    {"id": "cap-github-issue", "name": "github.issue.create", "description": "Create a GitHub issue in the configured repository", "category": "integration", "sensitivity": "medium"},
 ]

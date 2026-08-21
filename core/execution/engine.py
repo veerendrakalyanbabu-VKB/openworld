@@ -182,12 +182,15 @@ class ExecutionEngine:
         self.execution_count = 0
 
     def _register_defaults(self) -> None:
+        from core.connectors.github_executor import GitHubIssueExecutor
+
         for executor in [
             MockEmailExecutor(),
             MockWebhookExecutor(),
             MockApiExecutor(),
             MockPaymentExecutor(),
             MockInvoiceExecutor(),
+            GitHubIssueExecutor(),
         ]:
             self.register(executor)
 

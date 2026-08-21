@@ -16,6 +16,7 @@ ACTION_SENSITIVITY: dict[str, float] = {
     "database.write": 70,
     "database.read": 25,
     "webhook.send": 35,
+    "github.issue.create": 45,
     "file.write": 45,
     "file.read": 10,
 }
