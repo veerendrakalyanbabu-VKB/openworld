@@ -25,6 +25,16 @@ cp .env.example .env
 
 Never commit `.env`. Placeholders only live in `.env.example`.
 
+## First action (under 10 minutes)
+
+With the API running:
+
+```powershell
+python examples/gateway_quickstart.py
+```
+
+This submits a sandbox `send_email` through identity → capability → policy → risk → execution → verification → audit. It is DEMO DATA, not a live mailbox. Expected terminal output includes `policy=ALLOW`, `execution=sandbox (DEMO DATA)`, `verification=VERIFIED`, and `audit=recorded`.
+
 ## Commands (PowerShell)
 
 From the repository root:

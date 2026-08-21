@@ -19,6 +19,7 @@ from apps.api.routers import (
     audit,
     auth,
     billing,
+    capabilities,
     health,
     intelligence,
     policies,
@@ -99,7 +100,7 @@ async def _seed_demo_actions():
 app = FastAPI(
     title="OpenWorld API",
     description="The Trust Layer for the Agentic Internet",
-    version="0.2.0",
+    version="0.1.0",
     lifespan=lifespan,
     docs_url="/api/docs",
     redoc_url="/api/redoc",
@@ -145,6 +146,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 app.include_router(health.router, prefix="/api/v1", tags=["Health"])
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["Auth"])
 app.include_router(agents.router, prefix="/api/v1/agents", tags=["Agents"])
+app.include_router(capabilities.router, prefix="/api/v1/capabilities", tags=["Capabilities"])
 app.include_router(agent_roles.router, prefix="/api/v1/agents", tags=["Agent Roles"])
 app.include_router(actions.router, prefix="/api/v1/actions", tags=["Actions"])
 app.include_router(policies.router, prefix="/api/v1/policies", tags=["Policies"])

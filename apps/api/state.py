@@ -263,6 +263,8 @@ class AppState:
             if self._db_initialized
             else self.audit_logger.count()
         )
+        today = utc_now().date()
+        actions_today = [a for a in actions if a.created_at.date() == today]
         return {
             "demo_mode": self.demo_mode,
             "default_deny": settings.effective_default_deny,
@@ -270,13 +272,19 @@ class AppState:
             "total_agents": len(agents),
             "verified_actions": sum(1 for a in actions if a.status.value == "verified"),
             "blocked_actions": sum(1 for a in actions if a.status.value in ("blocked", "denied")),
+            "allowed_actions": sum(1 for a in actions if a.status.value in ("verified", "executed")),
+            "failed_actions": sum(
+                1 for a in actions if a.status.value in ("failed", "verification_failed")
+            ),
             "pending_approvals": len(self.lifecycle.get_pending_approvals()),
             "total_actions": len(actions),
+            "actions_today": len(actions_today),
             "total_policies": len(self.list_policies()),
             "audit_events": audit_count,
             "avg_trust_score": round(
                 sum(a.trust_score for a in agents) / max(len(agents), 1), 1
             ),
+            "data_label": "DEMO DATA" if self.demo_mode else "APPLICATION STATE",
         }
 
 

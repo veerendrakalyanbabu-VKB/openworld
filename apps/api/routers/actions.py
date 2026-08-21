@@ -9,6 +9,7 @@ from apps.api.state import state
 from core.db.session import get_db
 from core.idempotency.service import IdempotencyConflictError, IdempotencyService, hash_request
 from core.models.agent import Agent
+from core.models.capability import canonicalize_action
 
 router = APIRouter()
 
@@ -49,7 +50,11 @@ async def create_action(
     db: Session = Depends(get_db),
     idempotency_key: str | None = Header(None, alias="Idempotency-Key"),
 ):
-    req_hash = hash_request(agent.id, request.action, request.parameters, request.target)
+    canonical_action = canonicalize_action(request.action)
+    requested_permissions = [
+        canonicalize_action(p) for p in (request.requested_permissions or [canonical_action])
+    ]
+    req_hash = hash_request(agent.id, canonical_action, request.parameters, request.target)
 
     if idempotency_key:
         svc = IdempotencyService(db)
@@ -73,11 +78,11 @@ async def create_action(
     action = state.lifecycle.create_action(
         agent_id=agent.id,
         agent_name=agent.name,
-        action=request.action,
+        action=canonical_action,
         target=request.target,
         parameters=request.parameters,
         context=request.context,
-        requested_permissions=request.requested_permissions or [request.action],
+        requested_permissions=requested_permissions,
     )
     result = await state.lifecycle.process(action, agent=agent, auto_approve=request.auto_approve)
 
@@ -116,15 +121,16 @@ async def simulate_action(
     from core.identity.validator import IdentityValidator
     from core.permissions.validator import PermissionValidator
 
+    canonical_action = canonicalize_action(request.action)
     action = state.lifecycle.create_action(
         agent_id=agent.id,
         agent_name=agent.name,
-        action=request.action,
+        action=canonical_action,
         target=request.target,
         parameters=request.parameters,
     )
     identity_result = IdentityValidator().validate(agent)
-    permission_result = PermissionValidator().validate(agent, request.action)
+    permission_result = PermissionValidator().validate(agent, canonical_action)
     policy_result = state.policy_engine.simulate(action, agent.name)
     risk_result = state.risk_engine.assess(
         action, historical_reliability=agent.trust_dimensions.reliability

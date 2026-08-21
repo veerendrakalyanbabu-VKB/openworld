@@ -69,6 +69,18 @@ def require_roles(*required: Role):
 require_operator = require_roles(Role.OPERATOR, Role.SYSTEM_ADMIN)
 require_policy_admin = require_roles(Role.POLICY_ADMIN, Role.SYSTEM_ADMIN)
 require_system_admin = require_roles(Role.SYSTEM_ADMIN)
+require_viewer = require_roles(Role.VIEWER, Role.AGENT, Role.OPERATOR, Role.POLICY_ADMIN, Role.SYSTEM_ADMIN)
+
+
+async def require_read_access(
+    credentials: HTTPAuthorizationCredentials | None = Depends(_bearer),
+) -> AuthenticatedActor | None:
+    """Demo mode allows unauthenticated reads; production requires a bearer token."""
+    if settings.demo_mode:
+        if credentials is None:
+            return None
+        return await get_authenticated_actor(credentials)
+    return await get_authenticated_actor(credentials)
 
 
 async def get_optional_agent(

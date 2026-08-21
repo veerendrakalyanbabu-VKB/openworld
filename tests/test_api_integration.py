@@ -207,3 +207,41 @@ async def test_audit_events():
         assert response.status_code == 200
         data = response.json()
         assert "events" in data
+
+
+@pytest.mark.asyncio
+async def test_capability_catalog():
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/api/v1/capabilities")
+        assert response.status_code == 200
+        assert response.json()["total"] >= 8
+
+
+@pytest.mark.asyncio
+async def test_agent_create_rejects_wildcard_and_allows_explicit():
+    from tests.conftest import system_admin_headers
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        denied = await client.post(
+            "/api/v1/agents",
+            json={"name": "WildBot", "owner": "qa", "capabilities": ["*"]},
+            headers=system_admin_headers(),
+        )
+        assert denied.status_code == 400
+
+        created = await client.post(
+            "/api/v1/agents",
+            json={
+                "name": "BillingAgent",
+                "owner": "billing",
+                "organization": "acme",
+                "capabilities": ["send_email"],
+            },
+            headers=system_admin_headers(),
+        )
+        assert created.status_code == 200
+        agent = created.json()["agent"]
+        assert agent["capabilities"] == ["email.send"]
+        assert agent["organization"] == "acme"

@@ -1,6 +1,7 @@
 """Explainable rule-based risk engine."""
 
 from core.models.action import ActionRequest
+from core.models.capability import canonicalize_action
 from core.models.risk import RiskAssessment, RiskLevel
 
 # Action sensitivity mapping
@@ -22,6 +23,14 @@ ACTION_SENSITIVITY: dict[str, float] = {
 }
 
 DEFAULT_SENSITIVITY = 40
+SANDBOX_RECIPIENT_DOMAINS = {
+    "example.com",
+    "example.org",
+    "openworld.local",
+    "localhost",
+}
+SENSITIVE_KEYS = {"ssn", "password", "secret", "token", "api_key", "attachment", "document", "classified"}
+SENSITIVE_VALUES = {"high", "critical", "confidential", "restricted", "pii"}
 
 
 class RiskEngine:
@@ -41,7 +50,8 @@ class RiskEngine:
         reasons: list[str] = []
 
         # Action type sensitivity
-        action_sensitivity = ACTION_SENSITIVITY.get(action.action, DEFAULT_SENSITIVITY)
+        canonical_action = canonicalize_action(action.action)
+        action_sensitivity = ACTION_SENSITIVITY.get(canonical_action, ACTION_SENSITIVITY.get(action.action, DEFAULT_SENSITIVITY))
         factors["action_sensitivity"] = action_sensitivity
         if action_sensitivity >= 70:
             reasons.append(f"High-sensitivity action: {action.action}")
@@ -63,14 +73,34 @@ class RiskEngine:
                 financial_risk = 20
         factors["financial_value"] = financial_risk
 
-        # Target risk
-        target_risk = 30.0 if action.target else 10.0
+        # Recipient / resource
+        recipient = self._extract_recipient(action)
+        target_risk = 10.0
+        if recipient:
+            target_risk = 20.0
+            domain = recipient.split("@")[-1].lower() if "@" in recipient else ""
+            if domain and domain not in SANDBOX_RECIPIENT_DOMAINS:
+                target_risk = 45.0
+                reasons.append("External recipient")
+            elif domain in SANDBOX_RECIPIENT_DOMAINS:
+                target_risk = 12.0
+        elif action.target:
+            target_risk = 30.0
+            reasons.append(f"Resource target: {action.target}")
         factors["target"] = target_risk
+        factors["recipient"] = target_risk
+
+        # Data sensitivity
+        data_sensitivity = self._data_sensitivity(action)
+        factors["data_sensitivity"] = data_sensitivity
+        if data_sensitivity >= 40:
+            reasons.append("Sensitive document attached")
 
         # Permission scope
         perm_count = len(action.requested_permissions)
         perm_risk = min(perm_count * 15, 60)
         factors["permission_scope"] = perm_risk
+        factors["permission_level"] = perm_risk
         if perm_count > 2:
             reasons.append(f"Multiple permissions requested: {perm_count}")
 
@@ -86,11 +116,12 @@ class RiskEngine:
 
         # Weighted score
         weights = {
-            "action_sensitivity": 0.3,
-            "financial_value": 0.25,
-            "target": 0.1,
-            "permission_scope": 0.1,
-            "policy_violations": 0.15,
+            "action_sensitivity": 0.28,
+            "financial_value": 0.22,
+            "target": 0.08,
+            "data_sensitivity": 0.1,
+            "permission_scope": 0.08,
+            "policy_violations": 0.14,
             "reliability": 0.1,
         }
         risk_score = sum(factors[k] * weights[k] for k in weights)
@@ -119,6 +150,30 @@ class RiskEngine:
                 except (ValueError, TypeError):
                     pass
         return 0.0
+
+    def _extract_recipient(self, action: ActionRequest) -> str:
+        for key in ("to", "recipient", "email"):
+            val = action.parameters.get(key)
+            if isinstance(val, str) and val.strip():
+                return val.strip()
+        if action.target and "@" in action.target:
+            return action.target
+        return ""
+
+    def _data_sensitivity(self, action: ActionRequest) -> float:
+        blob = {**action.parameters, **action.context}
+        score = 0.0
+        for key, value in blob.items():
+            key_l = str(key).lower()
+            val_l = str(value).lower()
+            if key_l in SENSITIVE_KEYS or any(part in key_l for part in ("attach", "document", "ssn")):
+                score = max(score, 55.0)
+            if val_l in SENSITIVE_VALUES:
+                score = max(score, 50.0)
+        sensitivity = blob.get("sensitivity") or blob.get("data_sensitivity")
+        if str(sensitivity).lower() in SENSITIVE_VALUES:
+            score = max(score, 60.0)
+        return score
 
     def _score_to_level(self, score: float) -> RiskLevel:
         if score >= 75:

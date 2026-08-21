@@ -158,6 +158,7 @@ export interface Agent {
   name: string;
   description: string;
   owner: string;
+  organization?: string;
   status: string;
   capabilities: string[];
   trust_dimensions: {

@@ -44,7 +44,8 @@ class AgentRepository:
             row.status = agent.status.value
             row.capabilities = agent.capabilities
             row.trust_dimensions = agent.trust_dimensions.model_dump()
-            row.metadata_ = agent.metadata
+            metadata = {**(agent.metadata or {}), "organization": agent.organization}
+            row.metadata_ = metadata
             row.updated_at = utc_now()
         else:
             self.session.add(agent_from_domain(agent))

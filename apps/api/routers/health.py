@@ -15,7 +15,7 @@ async def health_check():
     return {
         "status": "healthy",
         "service": "openworld-api",
-        "version": "0.2.0",
+        "version": "0.1.0",
         "demo_mode": state.demo_mode,
     }
 

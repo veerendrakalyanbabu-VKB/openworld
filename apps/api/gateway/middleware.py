@@ -104,6 +104,12 @@ class GatewayMiddleware(BaseHTTPMiddleware):
         response = await call_next(request)
         headers = MutableHeaders(response.headers)
         headers["X-Request-ID"] = request_id
+        headers["X-Content-Type-Options"] = "nosniff"
+        headers["X-Frame-Options"] = "DENY"
+        headers["Referrer-Policy"] = "no-referrer"
+        headers["Cache-Control"] = "no-store"
+        headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+        headers["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'"
         if rate_result.limit is not None:
             headers["X-RateLimit-Limit"] = str(rate_result.limit)
         if rate_result.remaining is not None:

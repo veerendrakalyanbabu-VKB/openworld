@@ -72,7 +72,7 @@ class TestVerificationFailure:
             action="test.fail",
         )
         result = await lifecycle.process(action, agent=agent, auto_approve=True)
-        assert result.status == ActionStatus.EXECUTED
+        assert result.status == ActionStatus.VERIFICATION_FAILED
         verification_stage = next(s for s in result.stages if s.stage.value == "verification")
         assert verification_stage.status == "failed"
 

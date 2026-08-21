@@ -59,3 +59,16 @@ class TestRiskEngine:
         risk = engine.assess(action)
         assert "action_sensitivity" in risk.factors
         assert risk.recommended_decision in ("allow", "deny", "require_approval")
+
+    def test_external_recipient_is_explained(self):
+        engine = RiskEngine()
+        lifecycle = _make_lifecycle()
+        action = lifecycle.create_action(
+            agent_id="agent-email-bot",
+            agent_name="EmailBot",
+            action="email.send",
+            parameters={"to": "user@external-corp.io", "attachment": "contract.pdf"},
+        )
+        risk = engine.assess(action)
+        assert "External recipient" in risk.reasons
+        assert "Sensitive document attached" in risk.reasons

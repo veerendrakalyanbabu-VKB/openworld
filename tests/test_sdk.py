@@ -309,3 +309,24 @@ class TestErrors:
             pytest.raises(TimeoutError),
         ):
             client.health()
+
+
+class TestAgentGateway:
+    def test_execute_send_email_alias(self, sdk_client):
+        from packages.sdk.openworld.gateway import AgentGateway
+
+        gateway = AgentGateway(
+            agent="EmailBot",
+            policy="email-policy",
+            client=sdk_client,
+            auto_approve=True,
+        )
+        sdk_client.set_token(_token(DEMO_AGENT_EMAIL))
+        result = gateway.execute(
+            action="send_email",
+            recipient="customer@example.com",
+            purpose="invoice_delivery",
+            idempotency_key=str(uuid.uuid4()),
+        )
+        assert result.action["action"] == "email.send"
+        assert result.action["status"] == "verified"

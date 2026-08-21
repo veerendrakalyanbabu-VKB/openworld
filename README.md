@@ -1,64 +1,97 @@
 # OPENWORLD
 
-## The Trust Layer for the Agentic Internet.
+## The Trust Layer for the Agentic Internet
 
 > **Human Intent. Machine Execution. Verifiable Results.**
 
-OpenWorld is an open, secure, developer-first infrastructure layer that allows AI agents to interact with software, APIs, services, and digital workflows under explicit permissions, policies, verification, and auditability.
+**OpenWorld Gateway v0.1.0 — Early Developer Preview**
 
-This is **not** a chatbot. This is **not** an AI wrapper. This is the trust infrastructure for the agentic internet.
+OpenWorld is open, developer-first infrastructure that lets AI agents act on software, APIs, and workflows under explicit **identity**, **capabilities**, **policy**, **risk**, **approval**, **execution**, **verification**, and **audit**.
+
+**Core principle: Never trust the agent. Verify the action.**
+
+This release is an **Early Developer Preview**. It is **not** enterprise production-ready, **not** a live cloud deployment, and **not** backed by real customer integrations. Demo executors are sandbox/mock and labeled **DEMO DATA**.
 
 ---
 
-## The Problem
+## Trust Pipeline
 
-AI agents are increasingly executing real actions — sending emails, processing payments, modifying data. But there's no standard way to:
-
-- Verify agent identity
-- Enforce permissions deterministically
-- Require human approval for sensitive actions
-- Verify that actions actually succeeded
-- Maintain an auditable trail of everything
-
-## The Solution
-
-OpenWorld provides a complete trust pipeline:
+Every action passes through a deterministic trust pipeline. The policy engine — not an LLM — decides authorization.
 
 ```
-AI AGENT → IDENTITY → PERMISSION → POLICY → RISK → APPROVAL → EXECUTE → VERIFY → AUDIT
+REQUESTED
+  → IDENTITY        (JWT agent identity)
+  → CAPABILITY      (explicit agent capability grant)
+  → POLICY          (deterministic allow/deny)
+  → RISK            (rule-based score + factors)
+  → DECISION        (pipeline outcome)
+  → APPROVAL        (human gate when required)
+  → EXECUTION       (registered executor only)
+  → VERIFICATION    (outcome checked separately)
+  → AUDIT           (immutable lifecycle record)
 ```
 
-Every decision is **deterministic**. The policy engine — not an LLM — decides permissions. Every action is verified. Every event is audited.
+| Stage | What it enforces |
+|-------|------------------|
+| **Identity** | Bearer JWT maps to a registered agent |
+| **Capabilities** | Agent must hold an explicit catalog capability (wildcards rejected) |
+| **Policy** | Deterministic rules match agent, action, and conditions |
+| **Risk** | Explainable factors (recipient, data sensitivity, financial impact) |
+| **Decision** | Pipeline outcome before execution |
+| **Approval** | Operators approve or deny sensitive actions |
+| **Execution** | Only registered executors; direct bypass is rejected |
+| **Verification** | `EXECUTED` ≠ `VERIFIED`; failures are distinct |
+| **Audit** | Every gate and outcome is recorded |
+
+---
 
 ## Architecture
+
+```
+┌─────────────┐     ┌──────────────────┐     ┌─────────────────────────────┐
+│ Agent / SDK │────▶│ FastAPI Gateway  │────▶│ Trust Core (core/)          │
+│  (JWT)      │     │ apps/api/        │     │ policy · risk · lifecycle   │
+└─────────────┘     └────────┬─────────┘     │ execution · verification    │
+                             │               │ audit                       │
+┌─────────────┐              │               └──────────────┬──────────────┘
+│ Next.js UI  │──────────────┘                              │
+│ apps/web/   │                                             ▼
+└─────────────┘                                    PostgreSQL / SQLite
+```
 
 ```
 openworld/
 ├── apps/
 │   ├── web/          # Next.js command center UI
-│   └── api/          # FastAPI backend
+│   └── api/          # FastAPI gateway + routers
 ├── core/
 │   ├── policies/     # Deterministic policy engine
 │   ├── risk/         # Rule-based risk evaluation
-│   ├── execution/    # Registered action executors
+│   ├── execution/    # Registered action executors (sandbox in demo)
 │   ├── verification/ # Outcome verification
 │   └── audit/        # Immutable audit logging
-├── packages/
-│   └── sdk/          # Python SDK + CLI
-└── tests/
+├── packages/sdk/     # Python SDK + CLI
+├── openworld/        # Public import: from openworld import AgentGateway
+├── examples/         # Quickstart scripts
+├── docs/             # Architecture, deployment, SDK guides
+└── tests/            # 192+ automated tests
 ```
+
+---
 
 ## Quick Start
 
-Full walkthrough: [Developer Onboarding](docs/onboarding.md). Gateway: [docs/gateway.md](docs/gateway.md). SDK: [docs/sdk.md](docs/sdk.md).
+Full walkthrough: [Developer Onboarding](docs/onboarding.md) · [Gateway](docs/gateway.md) · [SDK](docs/sdk.md)
 
 ### Prerequisites
 
 - Python 3.11+
 - Node.js 20+ (frontend)
-- PostgreSQL 17 recommended (SQLite OK for a first boot)
+- PostgreSQL 17 recommended (SQLite OK for first boot)
 
-### Backend (PowerShell)
+### 1. Install and configure
+
+**PowerShell**
 
 ```powershell
 python -m pip install -e ".[dev]"
@@ -67,7 +100,7 @@ python -m alembic upgrade head
 python -m uvicorn apps.api.main:app --port 8000
 ```
 
-### Backend (Linux / macOS)
+**Linux / macOS**
 
 ```bash
 python -m pip install -e ".[dev]"
@@ -76,9 +109,9 @@ python -m alembic upgrade head
 python -m uvicorn apps.api.main:app --port 8000
 ```
 
-API: http://localhost:8000/api/docs — health: `/api/v1/health` — ready: `/api/v1/ready`
+API: http://localhost:8000/api/docs · health: `/api/v1/health` · ready: `/api/v1/ready`
 
-### Frontend
+### 2. Start the web UI
 
 ```powershell
 cd apps\web
@@ -86,11 +119,29 @@ npm install
 npm run dev
 ```
 
-```bash
-cd apps/web && npm install && npm run dev
+UI: http://localhost:3000
+
+### 3. Run the gateway quickstart
+
+With the API running in **demo mode** (default):
+
+```powershell
+python examples/gateway_quickstart.py
 ```
 
-UI: http://localhost:3000
+**Expected output (sandbox — not a live mailbox):**
+
+```
+action=email.send status=verified risk=low
+pipeline=requested -> identity -> capability -> policy -> risk -> decision -> execution -> verification -> complete
+policy=ALLOW (policy-email-limits)
+execution=sandbox (DEMO DATA)
+verification=VERIFIED
+audit=recorded
+sandbox=DEMO DATA (mock email executor, not a live mailbox)
+```
+
+Restart the API after pulling code changes — a stale process can serve old pipeline behavior.
 
 ### Docker (local stack)
 
@@ -100,7 +151,27 @@ docker compose up
 
 Compose starts PostgreSQL, API, and web. Do not put secrets in images.
 
-### SDK (real client)
+---
+
+## SDK Example
+
+```python
+from openworld import AgentGateway
+
+with AgentGateway(
+    agent="EmailBot",
+    policy="policy-email-limits",
+    auto_approve=True,
+) as gateway:
+    result = gateway.execute(
+        action="send_email",
+        recipient="customer@example.com",
+        purpose="invoice_delivery",
+    )
+    print(result.action["status"])  # verified (sandbox)
+```
+
+Lower-level client (same gateway, more endpoints):
 
 ```python
 from packages.sdk.openworld import OpenWorldClient
@@ -117,7 +188,7 @@ with OpenWorldClient(base_url="http://localhost:8000") as client:
     print(result.action["status"])
 ```
 
-Run `python examples/basic_action.py` with the API up. Identity is the JWT, never a body `agent_id`.
+Identity is always the JWT bearer token — never a trusted body `agent_id`. See `examples/basic_action.py`, `examples/approval_flow.py`, and `examples/audit_query.py`.
 
 ### CLI
 
@@ -127,61 +198,87 @@ openworld agents list
 openworld demo
 ```
 
-### Tests
+---
+
+## What's in v0.1.0
+
+**Implemented**
+
+- Full trust pipeline with execution bypass protection
+- FastAPI gateway + Next.js command center (action detail pipeline view)
+- JWT roles: `viewer`, `agent`, `operator`, `policy_admin`, `system_admin`
+- Agent create/update with capability catalog (wildcards rejected)
+- Python SDK: `AgentGateway` + `OpenWorldClient` + CLI
+- Demo/sandbox executors (email, webhook, API, payment, invoice; optional GitHub connector disabled by default)
+- PostgreSQL/SQLite persistence, Alembic migrations, Docker artifacts, CI
+
+**Simulated / demo only**
+
+- Email, payment, and webhook executors (mock responses, labeled DEMO DATA)
+- Demo JWT token issuance (`OPENWORLD_DEMO_MODE=true`)
+
+**Planned — not in this release**
+
+- Hosted cloud deployment · external beta · live payments · enterprise SSO · agent marketplace
+
+See [Roadmap](docs/roadmap.md).
+
+---
+
+## Security Model
+
+- **Default deny** in production (`OPENWORLD_DEMO_MODE=false`); demo mode uses labeled synthetic data
+- **Server-side authorization** on mutations (roles enforced on API)
+- **Explicit capabilities** — unrestricted wildcards rejected
+- **Execution boundary** — `ExecutionEngine.execute` requires `pipeline_authorized=True`
+- **Verification separate from execution** — actions are not trusted until verified
+- **Immutable audit trail** — lifecycle events recorded at each gate
+- **No arbitrary shell/SQL/code execution** — only registered executors
+- **Secrets via environment variables** — never committed to source
+
+Production startup requires PostgreSQL, a non-default `OPENWORLD_SECRET_KEY` (≥32 chars), and `OPENWORLD_DEMO_MODE=false`. See [SECURITY.md](SECURITY.md) and [Deployment](docs/deployment.md).
+
+---
+
+## Testing
 
 ```powershell
 python -m pytest tests/ -q
 python -m ruff check .
-python scripts/smoke_test_api.py
+cd apps\web
+npm run lint
+npm run build
 ```
 
-## Milestone 2.0B — Governance + Production Identity Hardening
+Current suite: **192 tests passing** (trust pipeline, gateway, SDK, authorization, verification, deployment artifacts).
 
-- SYSTEM_ADMIN role administration (`GET/POST/DELETE /agents/{id}/roles`)
-- Policy lifecycle with versioning (`PUT`, enable/disable, version history)
-- Intelligence endpoint authorization (production requires JWT; role-scoped queries)
-- Authorized audit export (JSON/CSV, bounded, auditable)
-- Identity provider abstraction (`IdentityProvider` / `JwtIdentityProvider`)
-- Timezone-aware UTC datetimes (`core.utils.time.utc_now`)
+Validate deployment files (no cloud provisioning):
 
-See [Architecture](docs/architecture.md) for governance details.
-
-## Milestone 2.0A — Production Hardening + Authorization
-
-- Role-based authorization: `AGENT`, `OPERATOR`, `POLICY_ADMIN`, `SYSTEM_ADMIN`
-- JWT required for approvals, audit read, policy mutation, and action submission
-- Production mode enforces PostgreSQL, strong secrets, default-deny, authenticated approvals
-- Demo mode retains synthetic data and executors (clearly labeled)
-
-See [Development Guide](docs/development.md) for configuration and the authorization matrix in [Architecture](docs/architecture.md).
-
-## Milestone 1.3A — PostgreSQL Persistence
-
-- SQLAlchemy + Alembic migrations
-- Repository layer for agents, policies, actions, audit
-- State survives API restart
-- Docker Compose PostgreSQL service
-
-See [Development Guide](docs/development.md) for database setup. Live PostgreSQL restart gate: `python scripts/postgres_restart_proof.py`.
-
-## Security Model
-
-- **Deterministic policy engine** — LLMs recommend, policies decide
-- **Role-based authorization** — operators approve, policy admins mutate policies
-- **Explicit executor registration** — no arbitrary shell execution
-- **Verification before trust** — actions aren't "successful" until verified
-- **Immutable audit trail** — every decision is recorded
-- **Human approval** — sensitive actions require explicit approval
-- **Explainable trust scores** — no arbitrary AI-generated numbers
-
-See [SECURITY.md](SECURITY.md) for responsible disclosure.
-
-## Testing
-
-```bash
-pytest tests/ -v
-ruff check core/ apps/ packages/ tests/
+```powershell
+python scripts/validate_deployment_artifacts.py
+docker compose -f docker-compose.prod.example.yml config
 ```
+
+---
+
+## Demo Limitations
+
+- Executors return **mock/sandbox** results — not live email, payments, or GitHub issues unless a connector is explicitly enabled
+- Demo mode allows unauthenticated **read** endpoints for the local UI; production deployments should restrict reads at the edge or via auth
+- `security@openworld.dev` in [SECURITY.md](SECURITY.md) is a placeholder until a real disclosure mailbox exists
+- No public hosted instance, custom domain, or real customers are claimed for v0.1.0
+
+---
+
+## Deployment Overview
+
+Deployment artifacts exist (`docker/Dockerfile.api`, `docker/Dockerfile.web`, `docker-compose.prod.example.yml`) and are validated by tests.
+
+**Status: READY FOR DEPLOYMENT — not ACTUALLY DEPLOYED.** You supply PostgreSQL, TLS, and secrets. See [docs/deployment.md](docs/deployment.md).
+
+Billing architecture is **BILLING-READY — not PAYMENTS-LIVE** ([docs/monetization.md](docs/monetization.md)).
+
+---
 
 ## Documentation
 
@@ -193,31 +290,11 @@ ruff check core/ apps/ packages/ tests/
 - [API Reference](docs/api.md)
 - [SDK Guide](docs/sdk.md)
 - [Development](docs/development.md)
-- [Deployment](docs/deployment.md) (READY FOR DEPLOYMENT, not actually deployed)
-- [External beta](docs/beta.md) (BETA-READY, not beta-live)
-- [Monetization](docs/monetization.md) (BILLING-READY, not payments-live)
+- [Deployment](docs/deployment.md)
+- [External beta checklist](docs/beta.md) (BETA-READY, not beta-live)
 - [Roadmap](docs/roadmap.md)
 
-## Roadmap
-
-- [x] Core domain models
-- [x] Deterministic policy engine
-- [x] Risk evaluation
-- [x] Action lifecycle (request → verify → audit)
-- [x] Human approval workflow
-- [x] Command center UI
-- [x] Python SDK + CLI
-- [x] Demo mode with synthetic data
-- [x] PostgreSQL/SQLite persistence (Milestone 1.3 — live PostgreSQL restart verified)
-- [x] JWT agent authentication
-- [x] Durable idempotency
-- [x] Production authorization boundaries (Milestone 2.0A)
-- [x] Governance: roles, policy lifecycle, audit export (Milestone 2.0B)
-- [x] SDK + API gateway (Milestone 2.1)
-- [x] Bounded GitHub issue connector, disabled by default (Milestone 2.2)
-- [ ] Cloud deployment
-- [ ] External beta
-- [ ] Monetization foundation
+---
 
 ## Contributing
 

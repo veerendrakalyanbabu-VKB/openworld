@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class HealthResponse(BaseModel):
@@ -20,6 +20,8 @@ class ReadinessResponse(BaseModel):
 
 
 class StatsResponse(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
     active_agents: int
     verified_actions: int
     blocked_actions: int

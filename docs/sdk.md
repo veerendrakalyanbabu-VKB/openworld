@@ -9,6 +9,20 @@ pip install -e .
 ## Usage
 
 ```python
+from openworld import AgentGateway
+
+with AgentGateway(agent="EmailBot", policy="policy-email-limits", auto_approve=True) as gateway:
+    result = gateway.execute(
+        action="send_email",
+        recipient="customer@example.com",
+        purpose="invoice_delivery",
+    )
+    print(result.action["status"])
+```
+
+Lower-level client:
+
+```python
 from packages.sdk.openworld import OpenWorldClient
 from packages.sdk.openworld.exceptions import AuthError, ForbiddenError, ConflictError
 

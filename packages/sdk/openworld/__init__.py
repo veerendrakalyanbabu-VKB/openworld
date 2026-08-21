@@ -9,6 +9,7 @@ from packages.sdk.openworld.exceptions import (
     OpenWorldError,
     TimeoutError,
 )
+from packages.sdk.openworld.gateway import AgentGateway
 from packages.sdk.openworld.models import (
     ActionResponse,
     HealthResponse,
@@ -17,6 +18,7 @@ from packages.sdk.openworld.models import (
 )
 
 __all__ = [
+    "AgentGateway",
     "DEFAULT_OPERATOR_AGENT_ID",
     "ActionResponse",
     "AuthError",

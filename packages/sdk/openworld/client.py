@@ -285,6 +285,58 @@ class AgentsAPI:
         response = self._transport.request("GET", f"/api/v1/agents/{agent_id}")
         return AgentDetailResponse.model_validate(response.json())
 
+    def create(
+        self,
+        name: str,
+        owner: str,
+        *,
+        organization: str = "default",
+        capabilities: list[str] | None = None,
+        description: str = "",
+        agent_id: str | None = None,
+        token: str | None = None,
+    ) -> AgentDetailResponse:
+        body: dict[str, Any] = {
+            "name": name,
+            "owner": owner,
+            "organization": organization,
+            "capabilities": capabilities or [],
+            "description": description,
+        }
+        if agent_id:
+            body["id"] = agent_id
+        with self._transport.temporary_token(token):
+            response = self._transport.request("POST", "/api/v1/agents", json=body)
+        data = response.json()
+        return AgentDetailResponse(agent=data.get("agent", data), demo_mode=data.get("demo_mode", False))
+
+    def update(
+        self,
+        agent_id: str,
+        *,
+        name: str | None = None,
+        owner: str | None = None,
+        organization: str | None = None,
+        capabilities: list[str] | None = None,
+        status: str | None = None,
+        token: str | None = None,
+    ) -> AgentDetailResponse:
+        body: dict[str, Any] = {}
+        if name is not None:
+            body["name"] = name
+        if owner is not None:
+            body["owner"] = owner
+        if organization is not None:
+            body["organization"] = organization
+        if capabilities is not None:
+            body["capabilities"] = capabilities
+        if status is not None:
+            body["status"] = status
+        with self._transport.temporary_token(token):
+            response = self._transport.request("PATCH", f"/api/v1/agents/{agent_id}", json=body)
+        data = response.json()
+        return AgentDetailResponse(agent=data.get("agent", data), demo_mode=data.get("demo_mode", False))
+
 
 class ActionsAPI:
     def __init__(self, transport: _HTTPTransport):

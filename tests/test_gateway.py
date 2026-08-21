@@ -60,7 +60,12 @@ def test_structured_401_includes_request_id():
     assert "detail" in body
 
 
-def test_readiness_endpoint():
+def test_security_headers_present():
+    client = TestClient(openworld_app)
+    response = client.get("/api/v1/health")
+    assert response.headers["X-Content-Type-Options"] == "nosniff"
+    assert response.headers["X-Frame-Options"] == "DENY"
+    assert response.headers["Referrer-Policy"] == "no-referrer"
     client = TestClient(openworld_app)
     response = client.get("/api/v1/ready")
     assert response.status_code == 200

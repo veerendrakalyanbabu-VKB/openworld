@@ -2,6 +2,7 @@
 
 from core.execution.engine import (
     ActionExecutor,
+    ExecutionBypassError,
     ExecutionEngine,
     ExecutionResult,
     MockApiExecutor,
@@ -13,6 +14,7 @@ from core.execution.engine import (
 
 __all__ = [
     "ActionExecutor",
+    "ExecutionBypassError",
     "ExecutionEngine",
     "ExecutionResult",
     "MockApiExecutor",

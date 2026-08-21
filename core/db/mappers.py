@@ -9,23 +9,26 @@ from core.models.policy import Policy, PolicyCondition, PolicyEffect, PolicyRule
 
 def agent_to_domain(row: AgentRow) -> Agent:
     td = row.trust_dimensions or {}
+    metadata = row.metadata_ or {}
     return Agent(
         id=row.id,
         name=row.name,
         description=row.description or "",
         owner=row.owner or "system",
+        organization=str(metadata.get("organization") or "default"),
         status=AgentStatus(row.status),
         capabilities=row.capabilities or [],
         trust_dimensions=TrustDimensions(**td) if td else TrustDimensions(
             identity=100, policy=100, reliability=100, verification=100, violations=100
         ),
-        metadata=row.metadata_ or {},
+        metadata=metadata,
         created_at=row.created_at,
         updated_at=row.updated_at,
     )
 
 
 def agent_from_domain(agent: Agent) -> AgentRow:
+    metadata = {**(agent.metadata or {}), "organization": agent.organization}
     return AgentRow(
         id=agent.id,
         name=agent.name,
@@ -34,7 +37,7 @@ def agent_from_domain(agent: Agent) -> AgentRow:
         status=agent.status.value,
         capabilities=agent.capabilities,
         trust_dimensions=agent.trust_dimensions.model_dump(),
-        metadata_=agent.metadata,
+        metadata_=metadata,
         created_at=agent.created_at,
         updated_at=agent.updated_at,
     )

@@ -7,7 +7,7 @@ from core.models.agent import Agent
 from core.models.audit import AuditEventType
 from core.utils.time import utc_now
 
-ASSIGNABLE_ROLES = {Role.OPERATOR, Role.POLICY_ADMIN, Role.SYSTEM_ADMIN}
+ASSIGNABLE_ROLES = {Role.VIEWER, Role.OPERATOR, Role.POLICY_ADMIN, Role.SYSTEM_ADMIN}
 
 
 def roles_from_metadata(agent: Agent) -> list[str]:
