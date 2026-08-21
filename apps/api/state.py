@@ -4,6 +4,7 @@ from collections.abc import Callable
 
 from apps.api.config import settings
 from core.audit.logger import AuditLogger
+from core.billing.service import BillingService
 from core.db.repositories import (
     ActionRepository,
     AgentRepository,
@@ -45,6 +46,7 @@ class AppState:
             audit_logger=self.audit_logger,
             agent_resolver=lambda agent_id: self.get_agent(agent_id),
         )
+        self.billing = BillingService()
 
         # In-memory cache for fast reads within a request (synced with DB)
         self._agents: dict[str, Agent] = {}
@@ -227,6 +229,8 @@ class AppState:
                 self._policies[policy.id] = policy
 
         self.policy_engine.set_policies(list(self._policies.values()) or DEMO_POLICIES)
+        if self._db_initialized:
+            self.billing.ensure_default_account()
         self._restore_pending_approvals()
 
     def _restore_pending_approvals(self) -> None:

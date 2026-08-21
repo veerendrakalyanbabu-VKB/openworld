@@ -195,6 +195,7 @@ ruff check core/ apps/ packages/ tests/
 - [Development](docs/development.md)
 - [Deployment](docs/deployment.md) (READY FOR DEPLOYMENT, not actually deployed)
 - [External beta](docs/beta.md) (BETA-READY, not beta-live)
+- [Monetization](docs/monetization.md) (BILLING-READY, not payments-live)
 - [Roadmap](docs/roadmap.md)
 
 ## Roadmap

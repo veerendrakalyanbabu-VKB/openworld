@@ -18,6 +18,7 @@ from apps.api.routers import (
     approvals,
     audit,
     auth,
+    billing,
     health,
     intelligence,
     policies,
@@ -152,3 +153,4 @@ app.include_router(verifications.router, prefix="/api/v1/verifications", tags=["
 app.include_router(audit.router, prefix="/api/v1/audit", tags=["Audit"])
 app.include_router(scenarios.router, prefix="/api/v1", tags=["Scenarios"])
 app.include_router(intelligence.router, prefix="/api/v1/intelligence", tags=["Intelligence"])
+app.include_router(billing.router, prefix="/api/v1/billing", tags=["Billing"])

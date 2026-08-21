@@ -63,6 +63,13 @@ async def create_action(
                 detail="Idempotency key reused with different request",
             ) from None
 
+    quota = state.billing.check_action_quota()
+    if not quota.allowed:
+        raise HTTPException(
+            status_code=403,
+            detail="Monthly action entitlement exceeded",
+        )
+
     action = state.lifecycle.create_action(
         agent_id=agent.id,
         agent_name=agent.name,
@@ -78,6 +85,7 @@ async def create_action(
     if result.status.value == "pending_approval":
         approval_status = "pending"
     state.save_action(result, approval_status=approval_status)
+    state.billing.record_action(result.id)
 
     response = {"action": result.model_dump(mode="json"), "demo_mode": state.demo_mode}
 
