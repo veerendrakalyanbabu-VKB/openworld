@@ -65,11 +65,15 @@ class AppState:
 
     def _ensure_schema(self) -> None:
         """Apply Alembic migrations to reach the latest schema."""
-        from alembic.config import Config
+        from pathlib import Path
 
         from alembic import command
+        from alembic.config import Config
 
-        command.upgrade(Config("alembic.ini"), "head")
+        alembic_ini = Path(__file__).resolve().parents[2] / "alembic.ini"
+        alembic_config = Config(str(alembic_ini))
+
+        command.upgrade(alembic_config, "head")
 
     def _wire_audit_persistence(self) -> None:
         if self._audit_persist is not None:

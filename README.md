@@ -15,11 +15,11 @@ OpenWorld is a developer-first **trust and execution layer for AI agents**.
 
 It provides a controlled boundary between what an AI agent **wants to do** and what a system is actually **allowed to execute**.
 
-Instead of trusting an agent directly, OpenWorld evaluates every action through a deterministic trust pipeline covering:
+Instead of trusting an agent directly, OpenWorld evaluates every action through a deterministic trust pipeline:
 
 **Identity → Capability → Policy → Risk → Approval → Execution → Verification → Audit**
 
-### Core Principle
+## Core Principle
 
 > **Never trust the agent. Verify the action.**
 
@@ -41,7 +41,7 @@ OpenWorld is publicly deployed and available as a hosted developer preview.
 
 ### Hosted Preview Scope
 
-The hosted environment demonstrates the OpenWorld trust architecture and command center.
+The hosted environment demonstrates the OpenWorld trust architecture and Command Center.
 
 External actions such as email delivery, payments, webhooks, and similar integrations remain **sandbox/demo operations** unless an explicit production connector is configured.
 
@@ -49,7 +49,7 @@ No real customer systems or financial transactions are enabled by default.
 
 ---
 
-# Why OpenWorld?
+## Why OpenWorld?
 
 AI agents are increasingly capable of taking actions:
 
@@ -66,27 +66,105 @@ The problem is no longer only:
 
 > **"Can the AI perform the task?"**
 
-The more important question becomes:
+The more important question is:
 
 > **"Should the AI be allowed to perform this action?"**
 
 OpenWorld addresses this problem by placing a **deterministic trust boundary** between an AI agent and the systems it wants to control.
 
+---
+
+## 🏗️ Trust Architecture
+
+---
+
+## 🐍 Python SDK
+
+OpenWorld provides a Python SDK for applications and AI agents that need to submit actions through the OpenWorld trust pipeline.
+
+```python
+from packages.sdk.openworld import OpenWorldClient
+
+client = OpenWorldClient(
+    base_url="http://localhost:8000",
+)
+
+result = client.actions.submit(
+    agent_id="demo-agent",
+    action_type="send_email",
+    payload={
+        "to": "developer@example.com",
+        "subject": "OpenWorld test",
+        "body": "Hello from OpenWorld",
+    },
+)
+
+print(result)
+```
+
+The SDK provides a programmatic interface for submitting actions to OpenWorld. Every submitted action is evaluated through the trust boundary before execution.
+
+**Identity → Capability → Policy → Risk → Approval → Execution → Verification → Audit**
+
+This prevents an AI agent from bypassing OpenWorld and executing directly against a target system.
+
+### SDK Responsibilities
+
+The Python SDK supports:
+
+- Action submission
+- Action simulation
+- Action status checks
+- Authentication
+- Approval workflows
+- Policy access
+- Audit access
+- Correlation IDs
+- Idempotency
+- Structured API errors
+
+For local development, the SDK can connect to:
+
 ```text
-AI Agent
-   │
-   ▼
-OpenWorld Gateway
-   │
-   ├── Identity
-   ├── Capabilities
-   ├── Policy
-   ├── Risk
-   ├── Decision
-   ├── Approval
-   ├── Execution
-   ├── Verification
-   └── Audit
-          │
-          ▼
-     Target System
+http://localhost:8000
+```
+
+For the hosted developer preview, configure the client with the deployed OpenWorld API URL.
+
+> **Important:** External integrations remain sandbox/demo operations unless an explicitly configured production connector is enabled.
+
+```text
+                         AI Agent / SDK
+                               │
+                               ▼
+                    ┌────────────────────┐
+                    │  OpenWorld Gateway │
+                    └─────────┬──────────┘
+                              │
+             ┌────────────────┼────────────────┐
+             │                │                │
+             ▼                ▼                ▼
+        Identity         Capability         Policy
+             │                │                │
+             └────────────────┼────────────────┘
+                              ▼
+                            Risk
+                              │
+                              ▼
+                           Decision
+                              │
+                       ┌──────┴──────┐
+                       │             │
+                    Approval      Rejected
+                       │
+                       ▼
+                    Execution
+                       │
+                       ▼
+                  Verification
+                       │
+                       ▼
+                      Audit
+                       │
+                       ▼
+                  Target System
