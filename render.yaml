@@ -32,4 +32,4 @@ services:
     startCommand: npm start
     envVars:
       - key: NEXT_PUBLIC_API_URL
-        sync: false
+        value: https://openworld-api.onrender.com
