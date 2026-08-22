@@ -10,6 +10,16 @@
 
 **Core principle: Never trust the agent. Verify the action.**
 
+### 🚀 Live Hosted Preview
+
+**OpenWorld is now publicly deployed and accessible online.**
+
+- 🌐 **Web Command Center:** https://openworld-web.onrender.com/
+- ❤️ **API Health:** https://openworld-api.onrender.com/api/v1/health
+
+> The hosted preview runs the OpenWorld Gateway with production-style deployment configuration.
+> Demo/synthetic data is clearly labeled where applicable. No real customer integrations or live external actions are enabled in this release.
+
 | | |
 |---|---|
 | [Documentation](docs/onboarding.md) | [Quick Start](#local-quickstart) |
@@ -236,7 +246,7 @@ Current suite: **197 tests passing**.
 
 ## Deployment
 
-**Status: READY FOR DEPLOYMENT — not ACTUALLY DEPLOYED.**
+**Status: HOSTED PREVIEW LIVE — deployed on Render.**  - Web UI: https://openworld-web.onrender.com/ - API: https://openworld-api.onrender.com/ - Database: PostgreSQL on Render - Deployment: Render - Public preview: Available - Production customer integrations: Not enabled
 
 A Render blueprint (`render.yaml`) is on `main` for reference. **Hosted Preview: Not yet deployed.** See [docs/deployment.md](docs/deployment.md).
 
