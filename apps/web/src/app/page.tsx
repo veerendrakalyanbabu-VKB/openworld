@@ -13,14 +13,28 @@ export default async function OverviewPage() {
   let actions: Awaited<ReturnType<typeof api.actions>>["actions"] = [];
   let approvals: Awaited<ReturnType<typeof api.approvals>>["approvals"] = [];
 
-  try {
-    [stats, { actions }, { approvals }] = await Promise.all([
-      api.stats(),
-      api.actions({ limit: "8" }),
-      api.approvals(DEFAULT_OPERATOR_AGENT_ID),
-    ]);
-  } catch {
-    // API may not be running during build
+  const [statsResult, actionsResult, approvalsResult] = await Promise.allSettled([
+    api.stats(),
+    api.actions({ limit: "8" }),
+    api.approvals(DEFAULT_OPERATOR_AGENT_ID),
+  ]);
+
+  if (statsResult.status === "fulfilled") {
+    stats = statsResult.value;
+  } else {
+    console.error("[dashboard] Stats unavailable", statsResult.reason instanceof Error ? statsResult.reason.message : "request failed");
+  }
+
+  if (actionsResult.status === "fulfilled") {
+    actions = actionsResult.value.actions;
+  } else {
+    console.error("[dashboard] Recent actions unavailable", actionsResult.reason instanceof Error ? actionsResult.reason.message : "request failed");
+  }
+
+  if (approvalsResult.status === "fulfilled") {
+    approvals = approvalsResult.value.approvals;
+  } else if (!(approvalsResult.reason instanceof Error && approvalsResult.reason.message.includes("API error: 401"))) {
+    console.error("[dashboard] Approval list unavailable", approvalsResult.reason instanceof Error ? approvalsResult.reason.message : "request failed");
   }
 
   return (
