@@ -67,8 +67,9 @@ class AppState:
         """Apply Alembic migrations to reach the latest schema."""
         from pathlib import Path
 
-        from alembic import command
         from alembic.config import Config
+
+        from alembic import command
 
         alembic_ini = Path(__file__).resolve().parents[2] / "alembic.ini"
         alembic_config = Config(str(alembic_ini))
