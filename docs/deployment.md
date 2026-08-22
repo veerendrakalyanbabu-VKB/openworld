@@ -129,3 +129,7 @@ Potentially billable if you create them yourself: VM/container hosting, managed 
 ## Rollback
 
 Keep the previous image digest or Render deploy ID. Restore PostgreSQL from a backup taken before a migration. Do not replay demo seed onto production data.
+
+---
+
+**Navigation:** [README](../README.md) · [Onboarding](onboarding.md) · [SDK Guide](sdk.md) · [Security](../SECURITY.md) · [Roadmap](roadmap.md)

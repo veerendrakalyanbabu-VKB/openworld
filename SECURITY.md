@@ -8,7 +8,7 @@ We take security seriously. If you discover a security vulnerability in OpenWorl
 
 ### How to Report
 
-Email security concerns to: **security@openworld.dev** (placeholder — configure a real mailbox before production use)
+Email security concerns to: **security@openworld.dev** *(placeholder — not a live mailbox; configure before production use)*
 
 Include:
 - Description of the vulnerability
@@ -127,3 +127,7 @@ Not force-upgraded for v0.1.0:
 
 - Host `pip` may report advisories — upgrade the local pip tool separately
 - Next.js 15 pulls transitive `postcss` and `sharp` advisories; `npm audit fix --force` would jump to Next 16 (breaking). Track an intentional Next upgrade separately.
+
+---
+
+**Navigation:** [README](README.md) · [Onboarding](docs/onboarding.md) · [SDK Guide](docs/sdk.md) · [Deployment](docs/deployment.md) · [Roadmap](docs/roadmap.md)

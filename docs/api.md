@@ -1,5 +1,7 @@
 # API Reference
 
+**LOCAL DEVELOPMENT ONLY** — default base URL when running the API on your machine:
+
 Base URL: `http://localhost:8000/api/v1`
 
 Interactive docs: `http://localhost:8000/api/docs`

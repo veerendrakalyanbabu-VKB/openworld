@@ -1,5 +1,7 @@
 # OpenWorld Gateway MVP v0.1.0
 
+**Release:** [v0.1.0 on GitHub](https://github.com/veerendrakalyanbabu-VKB/openworld/releases/tag/v0.1.0) · **Hosted Preview:** Not yet deployed
+
 ## Added
 - Complete trust pipeline: identity → capability → policy → risk → decision → approval → execution → verification → audit
 - Deterministic policy engine with agent/action/condition matching

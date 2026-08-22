@@ -33,4 +33,8 @@ Not claimed as live:
 - Private regional deployments
 - Usage-based billing with a live payment provider (architecture is billing-ready, payments are not live)
 
-See [docs/monetization.md](monetization.md), [docs/beta.md](beta.md), and [docs/deployment.md](deployment.md).
+See [monetization.md](monetization.md), [beta.md](beta.md), and [deployment.md](deployment.md).
+
+---
+
+**Navigation:** [README](../README.md) · [Onboarding](onboarding.md) · [SDK Guide](sdk.md) · [Deployment](deployment.md) · [Security](../SECURITY.md)

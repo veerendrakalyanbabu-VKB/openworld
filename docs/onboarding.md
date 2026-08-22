@@ -115,3 +115,7 @@ Identity is the JWT. The SDK does not decide policy.
 - Do not send `agent_id` in the action body and expect it to be trusted.
 - Do not put secrets in frontend env except `NEXT_PUBLIC_API_URL`.
 - Do not treat dry-run connector output as a live GitHub issue.
+
+---
+
+**Navigation:** [README](../README.md) · [SDK Guide](sdk.md) · [Deployment](deployment.md) · [Security](../SECURITY.md) · [Roadmap](roadmap.md)

@@ -38,4 +38,4 @@ Client / SDK
 | 429 | Rate limiter denied (only if a limiter is wired) |
 | 503 | Readiness: database not connected |
 
-Interactive OpenAPI: `http://localhost:8000/api/docs`.
+**LOCAL DEVELOPMENT ONLY:** Interactive OpenAPI at `http://localhost:8000/api/docs` when the API is running locally.
