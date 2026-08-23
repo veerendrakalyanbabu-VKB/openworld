@@ -26,6 +26,7 @@ def test_production_accepts_postgres_and_custom_secret():
         environment="production",
         database_url="postgresql://openworld:pw@localhost:5432/openworld",
         secret_key="a" * 32,
+        auth_bootstrap_token="b" * 32,
         cors_origins=["https://openworld-web.example.onrender.com"],
     )
     settings.validate_production_safety()
