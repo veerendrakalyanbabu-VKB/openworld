@@ -8,7 +8,9 @@ const API_URL =
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+
     const agentId = body?.agent_id;
+    const bootstrapToken = body?.bootstrap_token;
 
     if (!agentId || typeof agentId !== "string") {
       return NextResponse.json(
@@ -17,12 +19,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const bootstrapToken = process.env.OPENWORLD_AUTH_BOOTSTRAP_TOKEN;
-
-    if (!bootstrapToken) {
+    if (!bootstrapToken || typeof bootstrapToken !== "string") {
       return NextResponse.json(
-        { detail: "Production authentication bridge is not configured" },
-        { status: 503 }
+        { detail: "bootstrap_token is required" },
+        { status: 401 }
       );
     }
 
@@ -44,6 +44,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(data, {
       status: response.status,
+      headers: {
+        "Cache-Control": "no-store",
+      },
     });
   } catch {
     return NextResponse.json(
