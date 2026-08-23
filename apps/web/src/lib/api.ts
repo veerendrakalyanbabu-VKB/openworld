@@ -76,6 +76,16 @@ function newIdempotencyKey(): string {
 
 export const api = {
   demoAgents: () => loadDemoAgents(),
+    health: () =>
+    fetchAPI<{
+      status: string;
+      service: string;
+      version: string;
+      demo_mode: boolean;
+      is_production?: boolean;
+      environment?: string;
+    }>("/api/v1/health"),
+  
   billingAccount: (agentId: string) =>
     fetchAPI<{
       account_id: string;
