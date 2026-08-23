@@ -1,0 +1,27 @@
+{
+  "name": "OpenWorld",
+  "install": "bash .cursor/install.sh",
+  "start": "bash .cursor/start.sh",
+  "ports": [
+    {
+      "name": "API",
+      "port": 8000
+    },
+    {
+      "name": "Command Center",
+      "port": 3000
+    }
+  ],
+  "terminals": [
+    {
+      "name": "api",
+      "command": "python3 scripts/start-api.py",
+      "description": "FastAPI trust gateway on port 8000"
+    },
+    {
+      "name": "web",
+      "command": "cd apps/web && npm run dev",
+      "description": "Next.js Command Center on port 3000"
+    }
+  ]
+}
