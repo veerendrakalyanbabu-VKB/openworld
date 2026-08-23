@@ -125,6 +125,58 @@ async def test_demo_token_endpoint():
 
 
 @pytest.mark.asyncio
+async def test_production_bootstrap_token_issues_jwt(monkeypatch):
+    monkeypatch.setattr(settings, "demo_mode", False)
+    monkeypatch.setattr(settings, "auth_bootstrap_token", "test-bootstrap-secret")
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.post(
+            "/api/v1/auth/token",
+            json={
+                "agent_id": "agent-email-bot",
+                "bootstrap_token": "test-bootstrap-secret",
+            },
+        )
+        assert response.status_code == 200
+        assert decode_agent_token(response.json()["access_token"]) == "agent-email-bot"
+
+
+@pytest.mark.asyncio
+async def test_production_bootstrap_token_rejects_invalid_secret(monkeypatch):
+    monkeypatch.setattr(settings, "demo_mode", False)
+    monkeypatch.setattr(settings, "auth_bootstrap_token", "test-bootstrap-secret")
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.post(
+            "/api/v1/auth/token",
+            json={"agent_id": "agent-email-bot", "bootstrap_token": "wrong"},
+        )
+        assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_production_bootstrap_token_requires_configuration(monkeypatch):
+    monkeypatch.setattr(settings, "demo_mode", False)
+    monkeypatch.setattr(settings, "auth_bootstrap_token", "")
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.post(
+            "/api/v1/auth/token",
+            json={"agent_id": "agent-email-bot"},
+        )
+        assert response.status_code == 503
+
+
+@pytest.mark.asyncio
+async def test_demo_agents_remains_forbidden_in_production(monkeypatch):
+    monkeypatch.setattr(settings, "demo_mode", False)
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/api/v1/auth/demo-agents")
+        assert response.status_code == 403
+
+
+@pytest.mark.asyncio
 async def test_unauthorized_capability_blocked():
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:

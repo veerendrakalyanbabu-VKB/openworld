@@ -1,5 +1,7 @@
 """Authentication endpoints."""
 
+import secrets
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
@@ -14,6 +16,7 @@ router = APIRouter()
 
 class TokenRequest(BaseModel):
     agent_id: str
+    bootstrap_token: str | None = None
 
 
 class TokenResponse(BaseModel):
@@ -25,17 +28,35 @@ class TokenResponse(BaseModel):
 
 
 @router.post("/token")
-async def issue_token(request: TokenRequest, _: None = Depends(require_demo_mode)):
-    """Issue a JWT for a demo agent. DEMO AUTHENTICATION only."""
+async def issue_token(request: TokenRequest):
+    """Exchange demo credentials or the configured production bootstrap secret for a JWT."""
+    if not settings.demo_mode:
+        configured_token = settings.auth_bootstrap_token
+        if not configured_token:
+            raise HTTPException(
+                status_code=503,
+                detail="Production authentication bootstrap is not configured",
+            )
+        if not request.bootstrap_token or not secrets.compare_digest(
+            request.bootstrap_token,
+            configured_token,
+        ):
+            raise HTTPException(status_code=401, detail="Invalid bootstrap credentials")
+
     agent = state.get_agent(request.agent_id)
     if not agent:
         raise HTTPException(status_code=404, detail="Agent not found")
     token = create_agent_token(agent.id)
+    label = (
+        "Production bootstrap authentication"
+        if not settings.demo_mode
+        else "DEMO AUTHENTICATION — not for production"
+    )
     return TokenResponse(
         access_token=token,
         agent_id=agent.id,
         expires_in_minutes=settings.jwt_expire_minutes,
-        label="DEMO AUTHENTICATION — not for production",
+        label=label,
     )
 
 
