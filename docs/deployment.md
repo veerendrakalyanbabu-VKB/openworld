@@ -64,6 +64,7 @@ Staging and production fail startup if demo mode, SQLite, the default JWT secret
 | `OPENWORLD_DEMO_MODE` | `false` |
 | `OPENWORLD_POLICY_DEFAULT_DENY` | `true` |
 | `OPENWORLD_SECRET_KEY` | ≥32 characters, non-default |
+| `OPENWORLD_AUTH_BOOTSTRAP_TOKEN` | Separate secret used to obtain agent JWTs |
 | `OPENWORLD_DATABASE_URL` | PostgreSQL connection string |
 | `OPENWORLD_CORS_ORIGINS` | JSON array of allowed web origins (never `*`) |
 | `NEXT_PUBLIC_API_URL` | Public API URL for the Next.js web service (not localhost in production) |
