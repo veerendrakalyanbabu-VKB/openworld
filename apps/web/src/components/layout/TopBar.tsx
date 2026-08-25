@@ -3,12 +3,15 @@
 import { useEffect, useState } from "react";
 import { Search, Command } from "lucide-react";
 import { DemoBanner } from "./DemoBanner";
+import { ProductionBanner } from "./ProductionBanner";
 import { api, type DemoAgentAuth } from "@/lib/api";
 import { getActiveAgentId } from "@/lib/session";
+import { useBackendState } from "@/components/providers/BackendStateProvider";
 
 export function TopBar() {
   const [time, setTime] = useState("");
   const [identity, setIdentity] = useState<DemoAgentAuth | null>(null);
+  const { demoMode, loading } = useBackendState();
 
   useEffect(() => {
     const update = () => {
@@ -40,7 +43,7 @@ export function TopBar() {
 
   return (
     <header className="sticky top-0 z-30 flex items-center justify-between px-6 py-3 border-b border-ow-border-subtle bg-ow-bg/80 backdrop-blur-xl">
-      <DemoBanner />
+      {!loading && (demoMode ? <DemoBanner /> : <ProductionBanner />)}
 
       <div className="flex items-center gap-4 ml-auto">
         {identity && (

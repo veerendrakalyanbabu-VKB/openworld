@@ -42,7 +42,7 @@ export default async function OverviewPage() {
       <div>
         <h1 className="text-2xl font-semibold text-ow-text">Command Center</h1>
         <p className="text-sm text-ow-text-muted mt-1">
-          Live application state for the OpenWorld Gateway. Demo mode is labeled when synthetic data is in use.
+          Live application state for the OpenWorld Gateway.
         </p>
       </div>
 
