@@ -148,17 +148,13 @@ async function authenticateProduction(
   };
 
   if (!data.access_token) {
-    throw new Error(
-      "Authentication response did not contain an access token"
-    );
-  }
-  
-  if (typeof window === "undefined") {
-  throw new Error("Production authentication requires a browser");
+  throw new Error(
+    "Authentication response did not contain an access token"
+  );
 }
 
-  window.sessionStorage.setItem(
-  `openworld.jwt.${agentId}`,
+storeProductionToken(
+  agentId,
   data.access_token
 );
   storeProductionToken(
