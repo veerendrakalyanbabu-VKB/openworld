@@ -148,11 +148,15 @@ async function authenticateProduction(
   };
 
   if (!data.access_token) {
-    throw new Error(
-      "Authentication response did not contain an access token"
-    );
-  }
+  throw new Error(
+    "Authentication response did not contain an access token"
+  );
+}
 
+storeProductionToken(
+  agentId,
+  data.access_token
+);
   storeProductionToken(
     agentId,
     data.access_token
