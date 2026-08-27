@@ -18,6 +18,7 @@ DEMO_AGENTS = [
         name="FinanceBot",
         description="Handles financial operations, payments, and invoicing",
         owner="finance-team",
+        organization="openworld-demo",
         status=AgentStatus.ACTIVE,
         capabilities=["payment.create", "payment.send", "invoice.create", "invoice.read"],
         trust_dimensions=TrustDimensions(
@@ -30,6 +31,7 @@ DEMO_AGENTS = [
         name="InvoiceBot",
         description="Creates and sends invoices to clients",
         owner="billing-team",
+        organization="openworld-demo",
         status=AgentStatus.ACTIVE,
         capabilities=["invoice.create", "invoice.send", "invoice.read", "email.send"],
         trust_dimensions=TrustDimensions(
@@ -42,6 +44,7 @@ DEMO_AGENTS = [
         name="EmailBot",
         description="Sends transactional and notification emails",
         owner="comms-team",
+        organization="openworld-demo",
         status=AgentStatus.ACTIVE,
         capabilities=["email.send"],
         trust_dimensions=TrustDimensions(
@@ -54,6 +57,7 @@ DEMO_AGENTS = [
         name="ApiBot",
         description="Reads and writes data via external APIs",
         owner="engineering",
+        organization="openworld-demo",
         status=AgentStatus.ACTIVE,
         capabilities=["api.read", "api.write", "webhook.send"],
         trust_dimensions=TrustDimensions(
@@ -67,6 +71,7 @@ DEMO_AGENTS = [
         name="OpsBot",
         description="Human operator proxy for approval decisions (demo)",
         owner="operations",
+        organization="openworld-demo",
         status=AgentStatus.ACTIVE,
         capabilities=["approval.review"],
         trust_dimensions=TrustDimensions(
@@ -80,6 +85,7 @@ DEMO_AGENTS = [
         name="AdminBot",
         description="System administrator for governance operations (demo)",
         owner="platform",
+        organization="openworld-demo",
         status=AgentStatus.ACTIVE,
         capabilities=["governance.admin"],
         trust_dimensions=TrustDimensions(
@@ -89,10 +95,24 @@ DEMO_AGENTS = [
         created_at=utc_now() - timedelta(days=15),
     ),
     Agent(
+        id="agent-github-bot",
+        name="GithubBot",
+        description="Creates GitHub issues through the bounded connector",
+        owner="engineering",
+        organization="openworld-demo",
+        status=AgentStatus.ACTIVE,
+        capabilities=["github.issue.create"],
+        trust_dimensions=TrustDimensions(
+            identity=100, policy=96, reliability=94, verification=95, violations=100
+        ),
+        created_at=utc_now() - timedelta(days=10),
+    ),
+    Agent(
         id="agent-data-bot",
         name="DataBot",
         description="Database read/write operations for analytics",
         owner="data-team",
+        organization="openworld-demo",
         status=AgentStatus.SUSPENDED,
         capabilities=["database.read", "database.write"],
         trust_dimensions=TrustDimensions(
@@ -187,6 +207,22 @@ DEMO_POLICIES = [
             ),
         ],
     ),
+    Policy(
+        id="policy-github-issues",
+        name="github-issue-create",
+        description="Allow listed agent to create GitHub issues after Trust Core gates",
+        version="1.0",
+        rules=[
+            PolicyRule(
+                id="rule-github-issue-allow",
+                name="Allow GitHub Issue Create",
+                agent_match="GithubBot",
+                action_match="github.issue.create",
+                effect=PolicyEffect.ALLOW,
+                priority=40,
+            ),
+        ],
+    ),
 ]
 
 DEMO_CAPABILITIES = [
@@ -201,4 +237,5 @@ DEMO_CAPABILITIES = [
     {"id": "cap-db-read", "name": "database.read", "description": "Read database", "category": "data", "sensitivity": "medium"},
     {"id": "cap-db-write", "name": "database.write", "description": "Write database", "category": "data", "sensitivity": "critical"},
     {"id": "cap-webhook", "name": "webhook.send", "description": "Send webhooks", "category": "integration", "sensitivity": "medium"},
+    {"id": "cap-github-issue", "name": "github.issue.create", "description": "Create a GitHub issue in the configured repository", "category": "integration", "sensitivity": "medium"},
 ]

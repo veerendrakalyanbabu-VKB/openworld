@@ -9,6 +9,7 @@ from fastapi.responses import Response
 
 from apps.api.auth.audit_access import audit_scope_agent_id, resolve_audit_subject
 from apps.api.auth.dependencies import AuthenticatedActor, get_authenticated_actor
+from apps.api.gateway import get_request_id
 from apps.api.state import state
 from core.db.repositories import AuditRepository
 from core.db.session import session_scope
@@ -111,7 +112,7 @@ async def export_audit_events(
         correlation_id=correlation_id,
     )
 
-    correlation = request.headers.get("X-Request-ID", "")
+    correlation = get_request_id(request)
     state.audit_logger.log(
         AuditEventType.AUDIT_EXPORTED,
         actor=actor.agent.id,

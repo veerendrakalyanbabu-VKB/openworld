@@ -1,196 +1,170 @@
-# OPENWORLD
+# OpenWorld
 
-## The Trust Layer for the Agentic Internet.
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-OpenWorld-success?style=for-the-badge)](https://openworld-web.onrender.com/)
+[![API Health](https://img.shields.io/badge/API-Healthy-success?style=for-the-badge)](https://openworld-api.onrender.com/api/v1/health)
+[![Release](https://img.shields.io/github/v/release/veerendrakalyanbabu-VKB/openworld?style=flat-square)](https://github.com/veerendrakalyanbabu-VKB/openworld/releases)
+[![License](https://img.shields.io/github/license/veerendrakalyanbabu-VKB/openworld?style=flat-square)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.11%2B-blue?style=flat-square&logo=python)](https://www.python.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Next.js-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
+[![Tests](https://img.shields.io/badge/Tests-197%20passing-success?style=flat-square)](#testing)
+[![Status](https://img.shields.io/badge/Status-Early%20Developer%20Preview-orange?style=flat-square)](#project-status)
 
 > **Human Intent. Machine Execution. Verifiable Results.**
 
-OpenWorld is an open, secure, developer-first infrastructure layer that allows AI agents to interact with software, APIs, services, and digital workflows under explicit permissions, policies, verification, and auditability.
+OpenWorld is a developer-first **trust and execution layer for AI agents**.
 
-This is **not** a chatbot. This is **not** an AI wrapper. This is the trust infrastructure for the agentic internet.
+It provides a controlled boundary between what an AI agent **wants to do** and what a system is actually **allowed to execute**.
+
+Instead of trusting an agent directly, OpenWorld evaluates every action through a deterministic trust pipeline:
+
+**Identity → Capability → Policy → Risk → Approval → Execution → Verification → Audit**
+
+## Core Principle
+
+> **Never trust the agent. Verify the action.**
 
 ---
 
-## The Problem
+## 🚀 Live Preview
 
-AI agents are increasingly executing real actions — sending emails, processing payments, modifying data. But there's no standard way to:
+OpenWorld is publicly deployed and available as a hosted developer preview.
 
-- Verify agent identity
-- Enforce permissions deterministically
-- Require human approval for sensitive actions
-- Verify that actions actually succeeded
-- Maintain an auditable trail of everything
+| Resource | Status |
+|---|---|
+| 🌐 **Command Center** | [Open OpenWorld](https://openworld-web.onrender.com/) |
+| 🔌 **API** | [Open API](https://openworld-api.onrender.com/) |
+| ❤️ **API Health** | [Check Health](https://openworld-api.onrender.com/api/v1/health) |
+| 📦 **Source Code** | [GitHub Repository](https://github.com/veerendrakalyanbabu-VKB/openworld) |
+| 🏷️ **Latest Release** | [v0.1.0](https://github.com/veerendrakalyanbabu-VKB/openworld/releases/tag/v0.1.0) |
+| 🗄️ **Database** | PostgreSQL |
+| ☁️ **Deployment** | Render |
 
-## The Solution
+### Hosted Preview Scope
 
-OpenWorld provides a complete trust pipeline:
+The hosted environment demonstrates the OpenWorld trust architecture and Command Center.
 
-```
-AI AGENT → IDENTITY → PERMISSION → POLICY → RISK → APPROVAL → EXECUTE → VERIFY → AUDIT
-```
+External actions such as email delivery, payments, webhooks, and similar integrations remain **sandbox/demo operations** unless an explicit production connector is configured.
 
-Every decision is **deterministic**. The policy engine — not an LLM — decides permissions. Every action is verified. Every event is audited.
+No real customer systems or financial transactions are enabled by default.
 
-## Architecture
+---
 
-```
-openworld/
-├── apps/
-│   ├── web/          # Next.js command center UI
-│   └── api/          # FastAPI backend
-├── core/
-│   ├── policies/     # Deterministic policy engine
-│   ├── risk/         # Rule-based risk evaluation
-│   ├── execution/    # Registered action executors
-│   ├── verification/ # Outcome verification
-│   └── audit/        # Immutable audit logging
-├── packages/
-│   └── sdk/          # Python SDK + CLI
-└── tests/
-```
+## Why OpenWorld?
 
-## Quick Start
+AI agents are increasingly capable of taking actions:
 
-### Prerequisites
+- Sending emails
+- Calling APIs
+- Creating tickets
+- Updating records
+- Triggering workflows
+- Moving data
+- Initiating financial operations
+- Interacting with cloud infrastructure
 
-- Python 3.11+
-- Node.js 20+ (for frontend)
-- pip
+The problem is no longer only:
 
-### Backend
+> **"Can the AI perform the task?"**
 
-```bash
-pip install -e ".[dev]"
-uvicorn apps.api.main:app --reload --port 8000
-```
+The more important question is:
 
-API docs: http://localhost:8000/api/docs
+> **"Should the AI be allowed to perform this action?"**
 
-### Frontend
+OpenWorld addresses this problem by placing a **deterministic trust boundary** between an AI agent and the systems it wants to control.
 
-```bash
-cd apps/web
-npm install
-npm run dev
-```
+---
 
-UI: http://localhost:3000
+## 🏗️ Trust Architecture
 
-### Docker
+---
 
-```bash
-docker compose up
-```
+## 🐍 Python SDK
 
-### CLI
-
-```bash
-openworld health
-openworld agents list
-openworld actions list
-openworld policies list
-openworld audit list
-openworld demo
-```
-
-### SDK
+OpenWorld provides a Python SDK for applications and AI agents that need to submit actions through the OpenWorld trust pipeline.
 
 ```python
-from openworld import OpenWorldClient
+from packages.sdk.openworld import OpenWorldClient
 
-client = OpenWorldClient()
-
-result = client.actions.request(
-    agent="invoice-bot",
-    action="invoice.send",
-    parameters={"invoice_id": "INV-1001"},
+client = OpenWorldClient(
+    base_url="http://localhost:8000",
 )
+
+result = client.actions.submit(
+    agent_id="demo-agent",
+    action_type="send_email",
+    payload={
+        "to": "developer@example.com",
+        "subject": "OpenWorld test",
+        "body": "Hello from OpenWorld",
+    },
+)
+
+print(result)
 ```
 
-## Milestone 2.0B — Governance + Production Identity Hardening
+The SDK provides a programmatic interface for submitting actions to OpenWorld. Every submitted action is evaluated through the trust boundary before execution.
 
-- SYSTEM_ADMIN role administration (`GET/POST/DELETE /agents/{id}/roles`)
-- Policy lifecycle with versioning (`PUT`, enable/disable, version history)
-- Intelligence endpoint authorization (production requires JWT; role-scoped queries)
-- Authorized audit export (JSON/CSV, bounded, auditable)
-- Identity provider abstraction (`IdentityProvider` / `JwtIdentityProvider`)
-- Timezone-aware UTC datetimes (`core.utils.time.utc_now`)
+**Identity → Capability → Policy → Risk → Approval → Execution → Verification → Audit**
 
-See [Architecture](docs/architecture.md) for governance details.
+This prevents an AI agent from bypassing OpenWorld and executing directly against a target system.
 
-## Milestone 2.0A — Production Hardening + Authorization
+### SDK Responsibilities
 
-- Role-based authorization: `AGENT`, `OPERATOR`, `POLICY_ADMIN`, `SYSTEM_ADMIN`
-- JWT required for approvals, audit read, policy mutation, and action submission
-- Production mode enforces PostgreSQL, strong secrets, default-deny, authenticated approvals
-- Demo mode retains synthetic data and executors (clearly labeled)
+The Python SDK supports:
 
-See [Development Guide](docs/development.md) for configuration and the authorization matrix in [Architecture](docs/architecture.md).
+- Action submission
+- Action simulation
+- Action status checks
+- Authentication
+- Approval workflows
+- Policy access
+- Audit access
+- Correlation IDs
+- Idempotency
+- Structured API errors
 
-## Milestone 1.3A — PostgreSQL Persistence
+For local development, the SDK can connect to:
 
-- SQLAlchemy + Alembic migrations
-- Repository layer for agents, policies, actions, audit
-- State survives API restart
-- Docker Compose PostgreSQL service
-
-See [Development Guide](docs/development.md) for database setup. Live PostgreSQL restart gate: `python scripts/postgres_restart_proof.py`.
-
-## Security Model
-
-- **Deterministic policy engine** — LLMs recommend, policies decide
-- **Role-based authorization** — operators approve, policy admins mutate policies
-- **Explicit executor registration** — no arbitrary shell execution
-- **Verification before trust** — actions aren't "successful" until verified
-- **Immutable audit trail** — every decision is recorded
-- **Human approval** — sensitive actions require explicit approval
-- **Explainable trust scores** — no arbitrary AI-generated numbers
-
-See [SECURITY.md](SECURITY.md) for responsible disclosure.
-
-## Testing
-
-```bash
-pytest tests/ -v
-ruff check core/ apps/ packages/ tests/
+```text
+http://localhost:8000
 ```
 
-## Documentation
+For the hosted developer preview, configure the client with the deployed OpenWorld API URL.
 
-- [Architecture](docs/architecture.md)
-- [Policy Engine](docs/policy-engine.md)
-- [Trust Model](docs/trust-model.md)
-- [API Reference](docs/api.md)
-- [SDK Guide](docs/sdk.md)
-- [Development](docs/development.md)
-- [Roadmap](docs/roadmap.md)
+> **Important:** External integrations remain sandbox/demo operations unless an explicitly configured production connector is enabled.
 
-## Roadmap
-
-- [x] Core domain models
-- [x] Deterministic policy engine
-- [x] Risk evaluation
-- [x] Action lifecycle (request → verify → audit)
-- [x] Human approval workflow
-- [x] Command center UI
-- [x] Python SDK + CLI
-- [x] Demo mode with synthetic data
-- [x] PostgreSQL/SQLite persistence (Milestone 1.3 — live PostgreSQL restart verified)
-- [x] JWT agent authentication
-- [x] Durable idempotency
-- [x] Production authorization boundaries (Milestone 2.0A)
-- [x] Governance: roles, policy lifecycle, audit export (Milestone 2.0B)
-- [ ] Redis caching
-- [ ] Real connector integrations
-- [ ] Multi-tenant SaaS
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md).
-
-## License
-
-MIT License — see [LICENSE](LICENSE).
-
----
-
-**Human Intent. Machine Execution. Verifiable Results.**
+```text
+                         AI Agent / SDK
+                               │
+                               ▼
+                    ┌────────────────────┐
+                    │  OpenWorld Gateway │
+                    └─────────┬──────────┘
+                              │
+             ┌────────────────┼────────────────┐
+             │                │                │
+             ▼                ▼                ▼
+        Identity         Capability         Policy
+             │                │                │
+             └────────────────┼────────────────┘
+                              ▼
+                            Risk
+                              │
+                              ▼
+                           Decision
+                              │
+                       ┌──────┴──────┐
+                       │             │
+                    Approval      Rejected
+                       │
+                       ▼
+                    Execution
+                       │
+                       ▼
+                  Verification
+                       │
+                       ▼
+                      Audit
+                       │
+                       ▼
+                  Target System

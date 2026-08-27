@@ -15,6 +15,7 @@ from core.models.action import (
 )
 from core.models.agent import Agent
 from core.models.audit import AuditEventType
+from core.models.capability import canonicalize_action
 from core.permissions.validator import PermissionValidator
 from core.policies.engine import PolicyEngine
 from core.risk.engine import RiskEngine
@@ -61,6 +62,7 @@ class ActionLifecycle:
         context: dict | None = None,
         requested_permissions: list[str] | None = None,
     ) -> ActionRequest:
+        action = canonicalize_action(action)
         correlation_id = str(uuid.uuid4())
         action_request = ActionRequest(
             id=str(uuid.uuid4()),
@@ -70,7 +72,7 @@ class ActionLifecycle:
             target=target,
             parameters=parameters or {},
             context=context or {},
-            requested_permissions=requested_permissions or [action],
+            requested_permissions=[canonicalize_action(p) for p in (requested_permissions or [action])],
             correlation_id=correlation_id,
         )
         action_request.stages.append(
@@ -206,8 +208,8 @@ class ActionLifecycle:
             action.status = ActionStatus.BLOCKED
             action.stages.append(
                 ActionStageRecord(
-                    stage=ActionStage.POLICY,
-                    status="capability_denied",
+                    stage=ActionStage.CAPABILITY,
+                    status="denied",
                     details={
                         "missing_capabilities": permission.missing_capabilities,
                         "reasons": permission.reasons,
@@ -228,6 +230,14 @@ class ActionLifecycle:
             )
             action.updated_at = utc_now()
             return action
+
+        action.stages.append(
+            ActionStageRecord(
+                stage=ActionStage.CAPABILITY,
+                status="authorized",
+                evidence=permission.reasons,
+            )
+        )
 
         # ── POLICY ──
         decision = self.policy_engine.evaluate(action, action.agent_name)
@@ -256,6 +266,19 @@ class ActionLifecycle:
 
         if decision.decision == PolicyDecisionType.DENY:
             action.status = ActionStatus.BLOCKED
+            action.stages.append(
+                ActionStageRecord(
+                    stage=ActionStage.DECISION,
+                    status="deny",
+                    details={
+                        "agent": action.agent_id,
+                        "capability": action.action,
+                        "policy": decision.policy_id,
+                        "decision": "deny",
+                        "reasons": decision.reasons,
+                    },
+                )
+            )
             action.stages.append(ActionStageRecord(stage=ActionStage.COMPLETE, status="blocked"))
             self._audit(
                 AuditEventType.ACTION_BLOCKED,
@@ -298,6 +321,20 @@ class ActionLifecycle:
         # Risk-based deny — CRITICAL risk blocks execution
         if risk.recommended_decision == "deny":
             action.status = ActionStatus.BLOCKED
+            action.stages.append(
+                ActionStageRecord(
+                    stage=ActionStage.DECISION,
+                    status="deny",
+                    details={
+                        "agent": action.agent_id,
+                        "capability": action.action,
+                        "policy": decision.policy_id,
+                        "risk": risk.risk_level.value,
+                        "decision": "deny",
+                        "reasons": risk.reasons,
+                    },
+                )
+            )
             action.stages.append(ActionStageRecord(stage=ActionStage.COMPLETE, status="blocked"))
             self._audit(
                 AuditEventType.ACTION_BLOCKED,
@@ -312,12 +349,34 @@ class ActionLifecycle:
             action.updated_at = utc_now()
             return action
 
-        # ── APPROVAL GATE ──
+        # ── DECISION ──
         needs_approval = (
             decision.decision == PolicyDecisionType.REQUIRE_APPROVAL
             or risk.recommended_decision == "require_approval"
         )
+        if decision.decision == PolicyDecisionType.DENY or risk.recommended_decision == "deny":
+            decision_value = PolicyDecisionType.DENY.value
+        elif needs_approval:
+            decision_value = PolicyDecisionType.REQUIRE_APPROVAL.value
+        else:
+            decision_value = PolicyDecisionType.ALLOW.value
 
+        action.stages.append(
+            ActionStageRecord(
+                stage=ActionStage.DECISION,
+                status=decision_value,
+                details={
+                    "agent": action.agent_id,
+                    "capability": action.action,
+                    "policy": decision.policy_id,
+                    "risk": risk.risk_level.value,
+                    "decision": decision_value,
+                    "reasons": decision.reasons + risk.reasons,
+                },
+            )
+        )
+
+        # ── APPROVAL GATE ──
         if needs_approval and not auto_approve:
             action.status = ActionStatus.PENDING_APPROVAL
             action.stages.append(
@@ -389,7 +448,7 @@ class ActionLifecycle:
     async def _execute_and_verify(self, action: ActionRequest) -> ActionRequest:
         """Execute and verify — only called after all gates pass."""
         action.status = ActionStatus.EXECUTING
-        result = await self.execution_engine.execute(action)
+        result = await self.execution_engine.execute(action, pipeline_authorized=True)
 
         if result.success:
             action.status = ActionStatus.EXECUTED
@@ -447,6 +506,8 @@ class ActionLifecycle:
 
         if verification.status.value == "verified":
             action.status = ActionStatus.VERIFIED
+        else:
+            action.status = ActionStatus.VERIFICATION_FAILED
 
         self._audit(
             AuditEventType.VERIFICATION_COMPLETED,

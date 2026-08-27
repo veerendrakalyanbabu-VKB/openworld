@@ -19,6 +19,7 @@ class ActionStatus(str, Enum):
     EXECUTING = "executing"
     EXECUTED = "executed"
     VERIFIED = "verified"
+    VERIFICATION_FAILED = "verification_failed"
     FAILED = "failed"
     BLOCKED = "blocked"
 
@@ -26,11 +27,14 @@ class ActionStatus(str, Enum):
 class ActionStage(str, Enum):
     REQUESTED = "requested"
     IDENTITY = "identity"
+    CAPABILITY = "capability"
     POLICY = "policy"
     RISK = "risk"
+    DECISION = "decision"
     APPROVAL = "approval"
     EXECUTION = "execution"
     VERIFICATION = "verification"
+    AUDIT = "audit"
     COMPLETE = "complete"
 
 

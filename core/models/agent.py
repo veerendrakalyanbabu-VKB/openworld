@@ -41,6 +41,7 @@ class Agent(BaseModel):
     name: str
     description: str = ""
     owner: str = "system"
+    organization: str = "default"
     status: AgentStatus = AgentStatus.ACTIVE
     capabilities: list[str] = Field(default_factory=list)
     trust_dimensions: TrustDimensions = Field(default_factory=TrustDimensions)

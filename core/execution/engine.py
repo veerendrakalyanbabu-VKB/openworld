@@ -169,6 +169,10 @@ class MockInvoiceExecutor(ActionExecutor):
         )
 
 
+class ExecutionBypassError(PermissionError):
+    """Raised when execution is invoked without passing the trust pipeline."""
+
+
 class ExecutionEngine:
     """Registry and dispatcher for action executors."""
 
@@ -182,12 +186,15 @@ class ExecutionEngine:
         self.execution_count = 0
 
     def _register_defaults(self) -> None:
+        from core.connectors.github_executor import GitHubIssueExecutor
+
         for executor in [
             MockEmailExecutor(),
             MockWebhookExecutor(),
             MockApiExecutor(),
             MockPaymentExecutor(),
             MockInvoiceExecutor(),
+            GitHubIssueExecutor(),
         ]:
             self.register(executor)
 
@@ -200,7 +207,17 @@ class ExecutionEngine:
                 return executor
         return None
 
-    async def execute(self, action: ActionRequest) -> ExecutionResult:
+    async def execute(
+        self,
+        action: ActionRequest,
+        *,
+        pipeline_authorized: bool = False,
+    ) -> ExecutionResult:
+        if not pipeline_authorized:
+            raise ExecutionBypassError(
+                "Direct execution is rejected. Actions must pass identity, capability, "
+                "policy, and risk gates in ActionLifecycle."
+            )
         self.execution_count += 1
         executor = self.get_executor(action)
         if not executor:

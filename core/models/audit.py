@@ -27,6 +27,7 @@ class AuditEventType(str, Enum):
     ROLE_ASSIGNED = "role_assigned"
     ROLE_REVOKED = "role_revoked"
     AUDIT_EXPORTED = "audit_exported"
+    PLAN_CHANGED = "plan_changed"
     TRUST_UPDATED = "trust_updated"
 
 

@@ -109,3 +109,38 @@ class IdempotencyRow(Base):
     response_json: Mapped[dict] = mapped_column(JSON, default=dict)
     status_code: Mapped[int] = mapped_column(Integer, default=200)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+
+
+class BillingAccountRow(Base):
+    __tablename__ = "billing_accounts"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    plan_id: Mapped[str] = mapped_column(String(32), nullable=False, default="free")
+    entitlements: Mapped[dict] = mapped_column(JSON, default=dict)
+    subscription_status: Mapped[str] = mapped_column(String(32), default="none")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, onupdate=utc_now)
+
+
+class UsageCounterRow(Base):
+    __tablename__ = "usage_counters"
+    __table_args__ = (UniqueConstraint("account_id", "metric", "period_key", name="uq_usage_period"),)
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    account_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    metric: Mapped[str] = mapped_column(String(64), nullable=False)
+    period_key: Mapped[str] = mapped_column(String(16), nullable=False)
+    count: Mapped[int] = mapped_column(Integer, default=0)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, onupdate=utc_now)
+
+
+class UsageDedupRow(Base):
+    __tablename__ = "usage_dedup"
+    __table_args__ = (UniqueConstraint("account_id", "source_id", name="uq_usage_source"),)
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    account_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    source_id: Mapped[str] = mapped_column(String(128), nullable=False)
+    metric: Mapped[str] = mapped_column(String(64), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)

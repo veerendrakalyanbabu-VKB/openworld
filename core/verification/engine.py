@@ -67,6 +67,7 @@ class VerificationEngine:
             "webhook.send": "webhook successfully delivered",
             "api.read": "API response received",
             "api.write": "API write confirmed",
+            "github.issue.create": "GitHub issue created",
         }
         return expectations.get(action.action, f"{action.action} completed successfully")
 
@@ -81,6 +82,10 @@ class VerificationEngine:
             return f"invoice {status}"
         if "webhook" in action.action:
             return f"webhook response {output.get('status_code', 200)}"
+        if "github.issue" in action.action:
+            if execution.output.get("dry_run"):
+                return "github issue dry-run"
+            return f"github issue {output.get('issue_number', status)}"
         return f"execution {status}"
 
     def _compare(

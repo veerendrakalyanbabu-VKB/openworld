@@ -4,7 +4,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from packages.sdk.openworld.client import OpenWorldClient
+from packages.sdk.openworld.client import DEFAULT_OPERATOR_AGENT_ID, OpenWorldClient
 
 app = typer.Typer(name="openworld", help="OpenWorld CLI — The Trust Layer for the Agentic Internet")
 console = Console()
@@ -29,8 +29,8 @@ def health(api_url: str = "http://localhost:8000"):
     """Check API health."""
     with _get_client(api_url) as client:
         result = client.health()
-        console.print(f"[green]✓[/green] {result['service']} v{result['version']} — {result['status']}")
-        if result.get("demo_mode"):
+        console.print(f"[green]✓[/green] {result.service} v{result.version} — {result.status}")
+        if result.demo_mode:
             console.print("[yellow]DEMO MODE — SYNTHETIC DATA[/yellow]")
 
 
@@ -44,12 +44,12 @@ def agents_list(api_url: str = "http://localhost:8000"):
         table.add_column("Status")
         table.add_column("Trust Score")
         table.add_column("Capabilities")
-        for agent in data["agents"]:
+        for agent in data.agents:
             table.add_row(
-                agent["name"],
-                agent["status"],
-                str(agent["trust_dimensions"]["identity"] if "trust_dimensions" in agent else "—"),
-                ", ".join(agent["capabilities"][:3]),
+                agent.name,
+                agent.status,
+                str(agent.trust_dimensions.get("identity", "—") if agent.trust_dimensions else "—"),
+                ", ".join(agent.capabilities[:3]),
             )
         console.print(table)
 
@@ -64,7 +64,7 @@ def actions_list(api_url: str = "http://localhost:8000"):
         table.add_column("Action")
         table.add_column("Status")
         table.add_column("Risk")
-        for action in data["actions"]:
+        for action in data.actions:
             table.add_row(
                 action["agent_name"],
                 action["action"],
@@ -84,7 +84,7 @@ def policies_list(api_url: str = "http://localhost:8000"):
         table.add_column("Version")
         table.add_column("Rules")
         table.add_column("Enabled")
-        for policy in data["policies"]:
+        for policy in data.policies:
             table.add_row(
                 policy["name"],
                 policy["version"],
@@ -98,13 +98,14 @@ def policies_list(api_url: str = "http://localhost:8000"):
 def audit_list(api_url: str = "http://localhost:8000", limit: int = 20):
     """List audit events."""
     with _get_client(api_url) as client:
+        client.authenticate(DEFAULT_OPERATOR_AGENT_ID)
         data = client.audit.list(limit=limit)
         table = Table(title="Audit Events")
         table.add_column("Type", style="cyan")
         table.add_column("Actor")
         table.add_column("Action")
         table.add_column("Decision")
-        for event in data["events"]:
+        for event in data.events:
             table.add_row(
                 event["event_type"],
                 event["actor"],
@@ -122,24 +123,25 @@ def demo(api_url: str = "http://localhost:8000"):
 
     with _get_client(api_url) as client:
         health = client.health()
-        console.print(f"API Status: [green]{health['status']}[/green]\n")
+        console.print(f"API Status: [green]{health.status}[/green]\n")
 
         stats = client.stats()
-        console.print(f"Active Agents: {stats['active_agents']}")
-        console.print(f"Verified Actions: {stats['verified_actions']}")
-        console.print(f"Blocked Actions: {stats['blocked_actions']}")
-        console.print(f"Pending Approvals: {stats['pending_approvals']}")
-        console.print(f"Avg Trust Score: {stats['avg_trust_score']}\n")
+        console.print(f"Active Agents: {stats.active_agents}")
+        console.print(f"Verified Actions: {stats.verified_actions}")
+        console.print(f"Blocked Actions: {stats.blocked_actions}")
+        console.print(f"Pending Approvals: {stats.pending_approvals}")
+        console.print(f"Avg Trust Score: {stats.avg_trust_score}\n")
 
         console.print("[bold]Simulating payment action...[/bold]")
+        client.authenticate("agent-finance-bot")
         sim = client.actions.simulate(
             agent="FinanceBot",
             action="payment.create",
             parameters={"amount": 48500, "recipient": "ABC Services"},
         )
-        console.print(f"  Policy Decision: [yellow]{sim['policy']['decision']}[/yellow]")
-        console.print(f"  Risk Level: [yellow]{sim['risk']['risk_level']}[/yellow]")
-        console.print(f"  Reasons: {', '.join(sim['risk']['reasons'])}\n")
+        console.print(f"  Policy Decision: [yellow]{sim.policy['decision']}[/yellow]")
+        console.print(f"  Risk Level: [yellow]{sim.risk['risk_level']}[/yellow]")
+        console.print(f"  Reasons: {', '.join(sim.risk['reasons'])}\n")
 
         console.print("[green]Demo complete.[/green]")
         console.print("Human Intent. Machine Execution. Verifiable Results.\n")

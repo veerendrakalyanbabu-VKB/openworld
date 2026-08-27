@@ -1,51 +1,40 @@
 # Roadmap
 
-## v0.1.0 — MVP Foundation (Current)
+## v0.1.0 — OpenWorld Gateway MVP (current public preview)
 
-- [x] Core domain models
-- [x] Deterministic policy engine
-- [x] Rule-based risk engine
-- [x] Action lifecycle orchestration
-- [x] Verification engine
-- [x] Audit logging
-- [x] Human approval workflow
-- [x] FastAPI backend
-- [x] Next.js command center UI
-- [x] Trust Core 3D visualization
-- [x] Command palette (Ctrl+K)
-- [x] Intelligence interface
-- [x] Simulation lab
-- [x] Python SDK + CLI
-- [x] Demo mode with synthetic data
-- [x] Docker support
-- [x] CI/CD pipelines
-- [x] Test suite
+Implemented and covered by automated tests:
 
-## v0.2.0 — Persistence & Auth
+- [x] Trust pipeline (identity, capability, policy, risk, decision, approval, execution, verification, audit)
+- [x] Deterministic policy + risk engines (not LLM authorization)
+- [x] Direct execution bypass rejected
+- [x] FastAPI gateway + Next.js command center
+- [x] PostgreSQL/SQLite persistence and Alembic migrations
+- [x] JWT authentication and server-side roles
+- [x] Python SDK (`AgentGateway` / `OpenWorldClient`) + CLI
+- [x] Demo/sandbox executors (labeled DEMO DATA)
 
-- [ ] PostgreSQL via SQLAlchemy + Alembic
-- [ ] JWT authentication
-- [ ] API key management
-- [ ] Rate limiting
+Not claimed as live:
 
-## v0.3.0 — Connectors
+- [ ] Cloud deployment of a public instance
+- [ ] Custom domain (`openworld.dev` or otherwise) — not verified as available
+- [ ] External closed beta with real customers
+- [ ] Live payment processing
 
-- [ ] HTTP/API connector
-- [ ] Webhook connector
-- [ ] Email connector (SMTP)
-- [ ] File system connector (sandboxed)
+## Next (developer product)
 
-## v0.4.0 — Enterprise
+- [ ] Hosted preview environment
+- [ ] Additional bounded connectors (SMTP, HTTP) behind explicit enablement
+- [ ] Broader API docs and language SDKs
 
-- [ ] Multi-tenant organizations
-- [ ] Role-based access control
-- [ ] SSO integration
-- [ ] Usage metering
+## Later (do not block MVP)
 
-## v1.0.0 — Production
+- Agent Passport / reputation / marketplace
+- Enterprise SSO
+- Private regional deployments
+- Usage-based billing with a live payment provider (architecture is billing-ready, payments are not live)
 
-- [ ] Redis caching
-- [ ] Horizontal scaling
-- [ ] Agent marketplace
-- [ ] Reputation system
-- [ ] Internationalization
+See [monetization.md](monetization.md), [beta.md](beta.md), and [deployment.md](deployment.md).
+
+---
+
+**Navigation:** [README](../README.md) · [Onboarding](onboarding.md) · [SDK Guide](sdk.md) · [Deployment](deployment.md) · [Security](../SECURITY.md)

@@ -13,30 +13,50 @@ export default async function OverviewPage() {
   let actions: Awaited<ReturnType<typeof api.actions>>["actions"] = [];
   let approvals: Awaited<ReturnType<typeof api.approvals>>["approvals"] = [];
 
-  try {
-    [stats, { actions }, { approvals }] = await Promise.all([
-      api.stats(),
-      api.actions({ limit: "8" }),
-      api.approvals(DEFAULT_OPERATOR_AGENT_ID),
-    ]);
-  } catch {
-    // API may not be running during build
+  const [statsResult, actionsResult, approvalsResult] = await Promise.allSettled([
+    api.stats(),
+    api.actions({ limit: "8" }),
+    api.approvals(DEFAULT_OPERATOR_AGENT_ID),
+  ]);
+
+  if (statsResult.status === "fulfilled") {
+    stats = statsResult.value;
+  } else {
+    console.error("[dashboard] Stats unavailable", statsResult.reason instanceof Error ? statsResult.reason.message : "request failed");
+  }
+
+  if (actionsResult.status === "fulfilled") {
+    actions = actionsResult.value.actions;
+  } else {
+    console.error("[dashboard] Recent actions unavailable", actionsResult.reason instanceof Error ? actionsResult.reason.message : "request failed");
+  }
+
+  if (approvalsResult.status === "fulfilled") {
+    approvals = approvalsResult.value.approvals;
+  } else if (!(approvalsResult.reason instanceof Error && approvalsResult.reason.message.includes("API error: 401"))) {
+    console.error("[dashboard] Approval list unavailable", approvalsResult.reason instanceof Error ? approvalsResult.reason.message : "request failed");
   }
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold text-ow-text">Command Center</h1>
-        <p className="text-sm text-ow-text-muted mt-1">Your AI workforce is under control.</p>
+        <p className="text-sm text-ow-text-muted mt-1">
+          Live application state for the OpenWorld Gateway.
+        </p>
       </div>
 
+      {Boolean(stats.demo_mode) && (
+        <p className="text-xs uppercase tracking-wider text-ow-approval">DEMO DATA — not production telemetry</p>
+      )}
+
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <StatCard label="Trust Score" value={`${stats.avg_trust_score ?? "—"}`} variant="accent" />
         <StatCard label="Active Agents" value={Number(stats.active_agents) || 0} variant="trusted" />
-        <StatCard label="Verified" value={Number(stats.verified_actions) || 0} variant="trusted" />
+        <StatCard label="Actions Today" value={Number(stats.actions_today) || 0} />
+        <StatCard label="Allowed" value={Number(stats.allowed_actions) || 0} variant="trusted" />
         <StatCard label="Blocked" value={Number(stats.blocked_actions) || 0} variant="blocked" />
-        <StatCard label="Pending" value={Number(stats.pending_approvals) || 0} variant="approval" />
-        <StatCard label="Audit Events" value={Number(stats.audit_events) || 0} />
+        <StatCard label="Pending Approval" value={Number(stats.pending_approvals) || 0} variant="approval" />
+        <StatCard label="Verified" value={Number(stats.verified_actions) || 0} variant="trusted" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -85,7 +105,7 @@ export default async function OverviewPage() {
             <p className="text-sm text-ow-text-dim py-4 text-center">No recent actions</p>
           ) : (
             actions.map((action) => (
-              <div key={action.id} className="flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-ow-surface-elevated/30 transition-colors">
+              <Link key={action.id} href={`/actions/${action.id}`} className="flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-ow-surface-elevated/30 transition-colors">
                 <div className="flex items-center gap-3">
                   <Shield className="h-4 w-4 text-ow-text-dim" strokeWidth={1.5} />
                   <div>
@@ -97,7 +117,7 @@ export default async function OverviewPage() {
                   <StatusBadge status={action.status} />
                   <time className="text-xs text-ow-text-dim font-mono">{formatDate(action.created_at)}</time>
                 </div>
-              </div>
+              </Link>
             ))
           )}
         </div>

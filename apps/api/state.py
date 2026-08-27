@@ -4,6 +4,7 @@ from collections.abc import Callable
 
 from apps.api.config import settings
 from core.audit.logger import AuditLogger
+from core.billing.service import BillingService
 from core.db.repositories import (
     ActionRepository,
     AgentRepository,
@@ -45,6 +46,7 @@ class AppState:
             audit_logger=self.audit_logger,
             agent_resolver=lambda agent_id: self.get_agent(agent_id),
         )
+        self.billing = BillingService()
 
         # In-memory cache for fast reads within a request (synced with DB)
         self._agents: dict[str, Agent] = {}
@@ -63,11 +65,16 @@ class AppState:
 
     def _ensure_schema(self) -> None:
         """Apply Alembic migrations to reach the latest schema."""
+        from pathlib import Path
+
         from alembic.config import Config
 
         from alembic import command
 
-        command.upgrade(Config("alembic.ini"), "head")
+        alembic_ini = Path(__file__).resolve().parents[2] / "alembic.ini"
+        alembic_config = Config(str(alembic_ini))
+
+        command.upgrade(alembic_config, "head")
 
     def _wire_audit_persistence(self) -> None:
         if self._audit_persist is not None:
@@ -227,6 +234,8 @@ class AppState:
                 self._policies[policy.id] = policy
 
         self.policy_engine.set_policies(list(self._policies.values()) or DEMO_POLICIES)
+        if self._db_initialized:
+            self.billing.ensure_default_account()
         self._restore_pending_approvals()
 
     def _restore_pending_approvals(self) -> None:
@@ -259,6 +268,8 @@ class AppState:
             if self._db_initialized
             else self.audit_logger.count()
         )
+        today = utc_now().date()
+        actions_today = [a for a in actions if a.created_at.date() == today]
         return {
             "demo_mode": self.demo_mode,
             "default_deny": settings.effective_default_deny,
@@ -266,13 +277,19 @@ class AppState:
             "total_agents": len(agents),
             "verified_actions": sum(1 for a in actions if a.status.value == "verified"),
             "blocked_actions": sum(1 for a in actions if a.status.value in ("blocked", "denied")),
+            "allowed_actions": sum(1 for a in actions if a.status.value in ("verified", "executed")),
+            "failed_actions": sum(
+                1 for a in actions if a.status.value in ("failed", "verification_failed")
+            ),
             "pending_approvals": len(self.lifecycle.get_pending_approvals()),
             "total_actions": len(actions),
+            "actions_today": len(actions_today),
             "total_policies": len(self.list_policies()),
             "audit_events": audit_count,
             "avg_trust_score": round(
                 sum(a.trust_score for a in agents) / max(len(agents), 1), 1
             ),
+            "data_label": "DEMO DATA" if self.demo_mode else "APPLICATION STATE",
         }
 
 

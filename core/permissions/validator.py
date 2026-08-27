@@ -5,6 +5,7 @@ import fnmatch
 from pydantic import BaseModel, Field
 
 from core.models.agent import Agent
+from core.models.capability import canonicalize_action, is_unrestricted_wildcard
 
 
 class PermissionResult(BaseModel):
@@ -24,7 +25,14 @@ class PermissionValidator:
         action: str,
         requested_permissions: list[str] | None = None,
     ) -> PermissionResult:
-        required = requested_permissions or [action]
+        action = canonicalize_action(action)
+        required = [canonicalize_action(p) for p in (requested_permissions or [action])]
+        if any(is_unrestricted_wildcard(p) for p in required):
+            return PermissionResult(
+                permitted=False,
+                missing_capabilities=required,
+                reasons=["Unrestricted wildcard capabilities are not allowed"],
+            )
         missing: list[str] = []
 
         for perm in required:

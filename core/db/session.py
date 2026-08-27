@@ -21,6 +21,17 @@ def init_engine(database_url: str, *, echo: bool = False):
         connect_args["check_same_thread"] = False
         if ":memory:" in database_url:
             pool_kwargs["poolclass"] = StaticPool
+    else:
+        pool_kwargs["pool_pre_ping"] = True
+        pool_kwargs["pool_size"] = 5
+        pool_kwargs["max_overflow"] = 10
+        try:
+            from apps.api.config import settings
+
+            pool_kwargs["pool_size"] = settings.db_pool_size
+            pool_kwargs["max_overflow"] = settings.db_max_overflow
+        except ImportError:
+            pass
     _engine = create_engine(database_url, echo=echo, connect_args=connect_args, **pool_kwargs)
     _SessionLocal = sessionmaker(bind=_engine, autocommit=False, autoflush=False)
     return _engine

@@ -3,11 +3,17 @@
 import { useEffect, useState } from "react";
 import { api, type DemoAgentAuth } from "@/lib/api";
 import { getActiveAgentId, setActiveAgentId, hasRole } from "@/lib/session";
+import { useBackendState } from "@/components/providers/BackendStateProvider";
 
 export default function SettingsPage() {
   const [agents, setAgents] = useState<DemoAgentAuth[]>([]);
   const [activeId, setActiveId] = useState(getActiveAgentId());
   const [loading, setLoading] = useState(true);
+
+  const [planId, setPlanId] = useState<string>("");
+  const [usageCount, setUsageCount] = useState<number | null>(null);
+  
+  const { demoMode, loading: backendLoading } = useBackendState();
 
   useEffect(() => {
     api.demoAgents().then((list) => {
@@ -15,6 +21,20 @@ export default function SettingsPage() {
       setLoading(false);
     });
   }, []);
+
+  useEffect(() => {
+    if (!activeId) return;
+    api
+      .billingAccount(activeId)
+      .then((account) => {
+        setPlanId(account.plan_id);
+        setUsageCount(account.usage.count);
+      })
+      .catch(() => {
+        setPlanId("");
+        setUsageCount(null);
+      });
+  }, [activeId]);
 
   const active = agents.find((a) => a.agent_id === activeId);
 
@@ -76,8 +96,26 @@ export default function SettingsPage() {
         )}
         <div>
           <label className="text-xs text-ow-text-muted uppercase tracking-wider">Mode</label>
-          <p className="text-sm text-ow-approval mt-1">DEMO MODE — SYNTHETIC DATA</p>
+          {backendLoading ? (
+            <p className="text-sm text-ow-text-dim mt-1">Loading...</p>
+          ) : (
+            <p className={`text-sm mt-1 font-mono ${demoMode ? "text-ow-approval" : "text-ow-accent"}`}>
+              {demoMode ? "DEMO MODE — SYNTHETIC DATA" : "PRODUCTION MODE — LIVE GATEWAY"}
+            </p>
+          )}
         </div>
+      </div>
+      <div className="glass p-5 space-y-3 max-w-lg">
+        <h2 className="text-sm font-semibold tracking-wide uppercase text-ow-text-muted">Plan</h2>
+        <p className="text-sm text-ow-text">
+          Current plan: <span className="font-mono text-ow-accent">{planId || "unavailable"}</span>
+        </p>
+        <p className="text-sm text-ow-text-muted">
+          Actions this month: {usageCount === null ? "—" : usageCount}
+        </p>
+        <p className="text-xs text-ow-text-dim">
+          BILLING-READY — not PAYMENTS-LIVE. Plan changes require SYSTEM_ADMIN. Checkout does not charge.
+        </p>
       </div>
     </div>
   );

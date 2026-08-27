@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { api } from "@/lib/api";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { formatDate } from "@/lib/utils";
@@ -33,7 +34,7 @@ export default async function ActionsPage() {
           <div className="glass p-8 text-center text-ow-text-dim">No actions recorded</div>
         ) : (
           actions.map((action) => (
-            <div key={action.id} className="glass p-5">
+            <Link key={action.id} href={`/actions/${action.id}`} className="glass p-5 block hover:bg-ow-surface-elevated/20">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <div className="flex items-center gap-2">
@@ -88,7 +89,7 @@ export default async function ActionsPage() {
                 <span className="font-mono">{action.id.slice(0, 8)}...</span>
                 <time>{formatDate(action.created_at)}</time>
               </div>
-            </div>
+            </Link>
           ))
         )}
       </div>

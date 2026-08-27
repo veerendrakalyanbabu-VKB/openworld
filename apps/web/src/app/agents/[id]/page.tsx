@@ -16,7 +16,10 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ id
     notFound();
   }
 
-  const { agent, recent_actions } = data;
+  const { agent, recent_actions, policies = [], metrics } = data as typeof data & {
+    policies?: Array<{ id: string; name: string; version: string; enabled: boolean }>;
+    metrics?: { verification_rate?: number; verified?: number; failed_or_blocked?: number; source?: string };
+  };
   const trust = agent.trust_dimensions;
 
   return (
@@ -68,6 +71,7 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ id
           <dl className="space-y-2 text-sm">
             <div className="flex justify-between"><dt className="text-ow-text-muted">ID</dt><dd className="font-mono text-xs">{agent.id}</dd></div>
             <div className="flex justify-between"><dt className="text-ow-text-muted">Owner</dt><dd>{agent.owner}</dd></div>
+            <div className="flex justify-between"><dt className="text-ow-text-muted">Organization</dt><dd>{agent.organization || "—"}</dd></div>
             <div className="flex justify-between"><dt className="text-ow-text-muted">Created</dt><dd>{formatDate(agent.created_at)}</dd></div>
           </dl>
         </div>
@@ -80,16 +84,41 @@ export default async function AgentDetailPage({ params }: { params: Promise<{ id
         ) : (
           <div className="space-y-2">
             {recent_actions.map((action) => (
-              <div key={action.id} className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-ow-surface-elevated/30">
+              <Link key={action.id} href={`/actions/${action.id}`} className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-ow-surface-elevated/30">
                 <span className="text-sm">{action.action}</span>
                 <div className="flex items-center gap-3">
                   <StatusBadge status={action.status} />
                   <time className="text-xs text-ow-text-dim font-mono">{formatDate(action.created_at)}</time>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         )}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="glass p-5">
+          <h2 className="text-sm font-medium mb-4">Policies</h2>
+          {policies.length === 0 ? (
+            <p className="text-sm text-ow-text-dim">No matching policies in application state.</p>
+          ) : (
+            <ul className="space-y-2 text-sm">
+              {policies.map((policy) => (
+                <li key={policy.id} className="flex items-center justify-between">
+                  <span>{policy.name}</span>
+                  <span className="font-mono text-xs text-ow-text-dim">v{policy.version}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+        <div className="glass p-5 space-y-2 text-sm">
+          <h2 className="text-sm font-medium mb-4">Observed metrics</h2>
+          <p className="text-xs text-ow-text-dim uppercase tracking-wider">{metrics?.source === "application_state" ? "APPLICATION STATE" : "NOT VERIFIED"}</p>
+          <p>Verification rate: {metrics?.verification_rate ?? "—"}%</p>
+          <p>Verified (recent window): {metrics?.verified ?? 0}</p>
+          <p>Failed or blocked (recent window): {metrics?.failed_or_blocked ?? 0}</p>
+        </div>
       </div>
     </div>
   );

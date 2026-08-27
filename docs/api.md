@@ -1,5 +1,7 @@
 # API Reference
 
+**LOCAL DEVELOPMENT ONLY** — default base URL when running the API on your machine:
+
 Base URL: `http://localhost:8000/api/v1`
 
 Interactive docs: `http://localhost:8000/api/docs`
@@ -8,7 +10,8 @@ Interactive docs: `http://localhost:8000/api/docs`
 
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | /health | Health check |
+| GET | /health | Liveness |
+| GET | /ready | Readiness (database connectivity) |
 | GET | /stats | System statistics |
 | GET | /agents | List agents |
 | GET | /agents/{id} | Get agent details |
@@ -25,14 +28,19 @@ Interactive docs: `http://localhost:8000/api/docs`
 
 ## Headers
 
-- `X-Request-ID` — returned on all responses for tracing
+- `Authorization: Bearer <jwt>` — required for mutating and privileged reads
+- `X-Request-ID` — correlation ID; echoed on every response (generated if omitted)
+- `Idempotency-Key` — required for safe action retries (`POST /actions`)
 
 ## Error Format
 
 ```json
 {
-  "error": "Description",
-  "message": "Actionable message",
-  "request_id": "uuid"
+  "error": "unauthorized",
+  "message": "Authentication required",
+  "request_id": "uuid",
+  "detail": "Authentication required"
 }
 ```
+
+`error` is a stable code (`unauthorized`, `forbidden`, `not_found`, `conflict`, `payload_too_large`, `rate_limit_exceeded`, …).

@@ -1,6 +1,5 @@
 """FastAPI application entry point."""
 
-import uuid
 from contextlib import asynccontextmanager
 
 import structlog
@@ -9,6 +8,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from apps.api.config import settings
+from apps.api.gateway import GatewayMiddleware, get_request_id, register_exception_handlers
+from apps.api.gateway.errors import structured_error
+from apps.api.gateway.rate_limit import MemoryRateLimiter, NoOpRateLimiter
 from apps.api.routers import (
     actions,
     agent_roles,
@@ -16,6 +18,8 @@ from apps.api.routers import (
     approvals,
     audit,
     auth,
+    billing,
+    capabilities,
     health,
     intelligence,
     policies,
@@ -34,6 +38,7 @@ async def lifespan(app: FastAPI):
         "Starting OpenWorld API",
         demo_mode=settings.demo_mode,
         production=settings.is_production,
+        environment=settings.environment,
     )
     state.init_database()
     state.load_demo_data()
@@ -95,7 +100,7 @@ async def _seed_demo_actions():
 app = FastAPI(
     title="OpenWorld API",
     description="The Trust Layer for the Agentic Internet",
-    version="0.2.0",
+    version="0.1.0",
     lifespan=lifespan,
     docs_url="/api/docs",
     redoc_url="/api/redoc",
@@ -109,33 +114,39 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(
+    GatewayMiddleware,
+    rate_limiter=(
+        MemoryRateLimiter(settings.rate_limit_per_minute)
+        if settings.rate_limit_per_minute > 0
+        else NoOpRateLimiter()
+    ),
+    max_body_bytes=settings.max_request_bytes,
+    max_response_bytes=settings.max_response_bytes,
+)
 
-
-@app.middleware("http")
-async def add_request_id(request: Request, call_next):
-    request_id = request.headers.get("X-Request-ID", str(uuid.uuid4()))
-    response = await call_next(request)
-    response.headers["X-Request-ID"] = request_id
-    return response
+register_exception_handlers(app)
 
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    request_id = request.headers.get("X-Request-ID", "unknown")
+    request_id = get_request_id(request)
     logger.error("Unhandled exception", error=str(exc), request_id=request_id)
     return JSONResponse(
         status_code=500,
-        content={
-            "error": "An internal error occurred",
-            "message": "Please try again or contact support",
-            "request_id": request_id,
-        },
+        content=structured_error(
+            status_code=500,
+            message="Please try again or contact support",
+            request_id=request_id,
+        ),
+        headers={"X-Request-ID": request_id},
     )
 
 
 app.include_router(health.router, prefix="/api/v1", tags=["Health"])
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["Auth"])
 app.include_router(agents.router, prefix="/api/v1/agents", tags=["Agents"])
+app.include_router(capabilities.router, prefix="/api/v1/capabilities", tags=["Capabilities"])
 app.include_router(agent_roles.router, prefix="/api/v1/agents", tags=["Agent Roles"])
 app.include_router(actions.router, prefix="/api/v1/actions", tags=["Actions"])
 app.include_router(policies.router, prefix="/api/v1/policies", tags=["Policies"])
@@ -144,3 +155,4 @@ app.include_router(verifications.router, prefix="/api/v1/verifications", tags=["
 app.include_router(audit.router, prefix="/api/v1/audit", tags=["Audit"])
 app.include_router(scenarios.router, prefix="/api/v1", tags=["Scenarios"])
 app.include_router(intelligence.router, prefix="/api/v1/intelligence", tags=["Intelligence"])
+app.include_router(billing.router, prefix="/api/v1/billing", tags=["Billing"])

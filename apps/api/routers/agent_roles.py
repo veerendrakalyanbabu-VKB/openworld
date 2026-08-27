@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 
 from apps.api.auth.dependencies import AuthenticatedActor, get_authenticated_actor, require_system_admin
 from apps.api.auth.roles import Role, get_agent_roles, has_any_role
+from apps.api.gateway import get_request_id
 from apps.api.state import state
 from core.governance.roles import assign_role, revoke_role, roles_from_metadata
 
@@ -59,7 +60,7 @@ async def assign_agent_role(
     if not target:
         raise HTTPException(status_code=404, detail="Agent not found")
     role = _parse_role(body.role)
-    correlation_id = request.headers.get("X-Request-ID", "")
+    correlation_id = get_request_id(request)
     updated, old_roles, new_roles = assign_role(
         target=target,
         role=role,
@@ -90,7 +91,7 @@ async def revoke_agent_role(
     if not target:
         raise HTTPException(status_code=404, detail="Agent not found")
     role = _parse_role(role_name)
-    correlation_id = request.headers.get("X-Request-ID", "")
+    correlation_id = get_request_id(request)
     updated, old_roles, new_roles = revoke_role(
         target=target,
         role=role,
