@@ -157,10 +157,6 @@ storeProductionToken(
   agentId,
   data.access_token
 );
-  storeProductionToken(
-    agentId,
-    data.access_token
-  );
 }
 
 /**

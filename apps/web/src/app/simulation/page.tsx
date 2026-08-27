@@ -474,7 +474,7 @@ export default function SimulationPage() {
           data.action.correlation_id
         );
       }
-    } catch (requestError) {
+    } catch {
       setExecResult(null);
 
       /*
